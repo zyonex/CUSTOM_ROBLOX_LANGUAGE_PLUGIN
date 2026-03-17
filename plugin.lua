@@ -276,11 +276,11 @@ end
 local function fsDeserialise(data, parent)
 	if data.t=="f" then
 		local n={type="file",name=data.n,lang=data.l or "neb",content=data.c or "",
-		         parent=parent,id=data.id or genId(),dirty=false}
+			parent=parent,id=data.id or genId(),dirty=false}
 		FS.index[n.id]=n; return n
 	else
 		local n={type="folder",name=data.n,parent=parent,
-		         children={},id=data.id or genId(),expanded=data.e or false}
+			children={},id=data.id or genId(),expanded=data.e or false}
 		FS.index[n.id]=n
 		for _,cd in ipairs(data.ch or {}) do
 			table.insert(n.children, fsDeserialise(cd,n))
@@ -333,86 +333,86 @@ end
 -- ── Keywords (70+) ──────────────────────────────────────────────────────────
 local NEB_KEYWORDS = {
 	-- control flow
-	"if","elif","else","end","match","case","default","when","then",
-	"while","for","loop","break","continue","return","yield",
-	"unless","until","do","repeat","defer","fallthrough",
+	["if"]=true,["elif"]=true,["else"]=true,["end"]=true,["match"]=true,["case"]=true,["default"]=true,["when"]=true,["then"]=true,
+	["while"]=true,["for"]=true,["loop"]=true,["break"]=true,["continue"]=true,["return"]=true,["yield"]=true,
+	["unless"]=true,["until"]=true,["do"]=true,["repeat"]=true,["defer"]=true,["fallthrough"]=true,
 	-- declarations
-	"let","const","var","mut","fn","func","lambda","closure",
-	"class","struct","enum","trait","impl","interface","type","alias",
-	"module","mod","import","export","from","use","include","require",
+	["let"]=true,["const"]=true,["var"]=true,["mut"]=true,["fn"]=true,["func"]=true,["lambda"]=true,["closure"]=true,
+	["class"]=true,["struct"]=true,["enum"]=true,["trait"]=true,["impl"]=true,["interface"]=true,["type"]=true,["alias"]=true,
+	["module"]=true,["mod"]=true,["import"]=true,["export"]=true,["from"]=true,["use"]=true,["include"]=true,["require"]=true,
 	-- visibility / modifiers
-	"pub","priv","prot","pkg","static","final","sealed","abstract",
-	"override","virtual","inline","extern","async","await","spawn",
-	"lazy","move","ref","pin","unpin","unsafe","safe","atomic",
+	["pub"]=true,["priv"]=true,["prot"]=true,["pkg"]=true,["static"]=true,["final"]=true,["sealed"]=true,["abstract"]=true,
+	["override"]=true,["virtual"]=true,["inline"]=true,["extern"]=true,["async"]=true,["await"]=true,["spawn"]=true,
+	["lazy"]=true,["move"]=true,["ref"]=true,["pin"]=true,["unpin"]=true,["unsafe"]=true,["safe"]=true,["atomic"]=true,
 	-- logic / boolean
-	"and","or","not","in","is","isnt","has","hasnt","as","where",
-	"true","false","nil","null","void","self","super","this",
-	"some","none","ok","err","typeof","sizeof","alignof",
+	["and"]=true,["or"]=true,["not"]=true,["is"]=true,["isnt"]=true,["has"]=true,["hasnt"]=true,["as"]=true,["where"]=true,["in"]=true,
+	["true"]=true,["false"]=true,["nil"]=true,["null"]=true,["void"]=true,["self"]=true,["super"]=true,["this"]=true,
+	["some"]=true,["none"]=true,["ok"]=true,["err"]=true,["typeof"]=true,["sizeof"]=true,["alignof"]=true,
 	-- error handling
-	"try","catch","throw","raise","except","finally","ensure",
-	"panic","assert","unreachable","todo","debug","trace",
+	["try"]=true,["catch"]=true,["throw"]=true,["raise"]=true,["except"]=true,["finally"]=true,["ensure"]=true,
+	["panic"]=true,["assert"]=true,["unreachable"]=true,["todo"]=true,["debug"]=true,["trace"]=true,
 	-- roblox-specific
-	"game","workspace","script","plugin","part","model","tween",
-	"remote","event","signal","service","player","character",
-	"humanoid","tool","gui","touched","changed","added","removing",
+	["game"]=true,["workspace"]=true,["script"]=true,["plugin"]=true,["part"]=true,["model"]=true,["tween"]=true,
+	["remote"]=true,["event"]=true,["signal"]=true,["service"]=true,["player"]=true,["character"]=true,
+	["humanoid"]=true,["tool"]=true,["gui"]=true,["touched"]=true,["changed"]=true,["added"]=true,["removing"]=true,
 	-- special NebScript
-	"macro","pipe","compose","curry","partial","memo","once",
-	"with","using","test","bench","profile","derive","new","delete",
+	["macro"]=true,["pipe"]=true,["compose"]=true,["curry"]=true,["partial"]=true,["memo"]=true,["once"]=true,
+	["with"]=true,["using"]=true,["test"]=true,["bench"]=true,["profile"]=true,["derive"]=true,["new"]=true,["delete"]=true,
 }
 
 -- ── Built-in functions (60+) ────────────────────────────────────────────────
 local NEB_BUILTINS = {
 	-- math
-	"abs","ceil","floor","round","sqrt","cbrt","pow","log","log2","log10",
-	"sin","cos","tan","asin","acos","atan","atan2","exp","hypot",
-	"min","max","clamp","lerp","map_range","sign","fract","wrap","pingpong",
-	"random","seed","noise","smooth","smoothstep","smootherstep",
-	"deg2rad","rad2deg","approx","between","divmod","gcd","lcm",
+	["abs"]=true,["ceil"]=true,["floor"]=true,["round"]=true,["sqrt"]=true,["cbrt"]=true,["pow"]=true,["log"]=true,["log2"]=true,["log10"]=true,
+	["sin"]=true,["cos"]=true,["tan"]=true,["asin"]=true,["acos"]=true,["atan"]=true,["atan2"]=true,["exp"]=true,["hypot"]=true,
+	["min"]=true,["max"]=true,["clamp"]=true,["lerp"]=true,["map_range"]=true,["sign"]=true,["fract"]=true,["wrap"]=true,["pingpong"]=true,
+	["random"]=true,["seed"]=true,["noise"]=true,["smooth"]=true,["smoothstep"]=true,["smootherstep"]=true,
+	["deg2rad"]=true,["rad2deg"]=true,["approx"]=true,["between"]=true,["divmod"]=true,["gcd"]=true,["lcm"]=true,
 	-- string
-	"len","upper","lower","trim","ltrim","rtrim","split","join",
-	"replace","contains","startswith","endswith","find","gmatch",
-	"format","fmt","byte","char","rep","sub","reverse","pad","lpad","rpad",
-	"count","titlecase","camelcase","snakecase","kebabcase","escape","unescape",
+	["len"]=true,["upper"]=true,["lower"]=true,["trim"]=true,["ltrim"]=true,["rtrim"]=true,["split"]=true,["join"]=true,
+	["replace"]=true,["contains"]=true,["startswith"]=true,["endswith"]=true,["find"]=true,["gmatch"]=true,
+	["format"]=true,["fmt"]=true,["byte"]=true,["char"]=true,["rep"]=true,["sub"]=true,["reverse"]=true,["pad"]=true,["lpad"]=true,["rpad"]=true,
+	["count"]=true,["titlecase"]=true,["camelcase"]=true,["snakecase"]=true,["kebabcase"]=true,["escape"]=true,["unescape"]=true,
 	-- table / array / iterator
-	"push","pop","shift","unshift","insert","remove","sort","sorted",
-	"map","filter","reduce","find_item","findindex","every","some",
-	"flat","flatmap","zip","unzip","enumerate","range","slice",
-	"concat","unique","reverse_arr","keys","values","entries",
-	"groupby","partition","chunk","take","skip","first","last",
-	"deepcopy","shallowcopy","merge","diff","intersect","freeze","seal",
+	["push"]=true,["pop"]=true,["shift"]=true,["unshift"]=true,["insert"]=true,["remove"]=true,["sort"]=true,["sorted"]=true,
+	["map"]=true,["filter"]=true,["reduce"]=true,["find_item"]=true,["findindex"]=true,["every"]=true,["some"]=true,
+	["flat"]=true,["flatmap"]=true,["zip"]=true,["unzip"]=true,["enumerate"]=true,["range"]=true,["slice"]=true,
+	["concat"]=true,["unique"]=true,["reverse_arr"]=true,["keys"]=true,["values"]=true,["entries"]=true,
+	["groupby"]=true,["partition"]=true,["chunk"]=true,["take"]=true,["skip"]=true,["first"]=true,["last"]=true,
+	["deepcopy"]=true,["shallowcopy"]=true,["merge"]=true,["diff"]=true,["intersect"]=true,["freeze"]=true,["seal"]=true,
 	-- type
-	"typeof","tostring","tonumber","tobool","toint","tofloat","parse",
-	"isstring","isnumber","isbool","istable","isnil","isfunc","isnan","isinf",
+	["typeof"]=true,["tostring"]=true,["tonumber"]=true,["tobool"]=true,["toint"]=true,["tofloat"]=true,["parse"]=true,
+	["isstring"]=true,["isnumber"]=true,["isbool"]=true,["istable"]=true,["isnil"]=true,["isfunc"]=true,["isnan"]=true,["isinf"]=true,
 	-- io / debug
-	"print","warn","error","info","log","dbg","assert","pcall","xpcall",
+	["print"]=true,["warn"]=true,["error"]=true,["info"]=true,["log"]=true,["dbg"]=true,["assert"]=true,["pcall"]=true,["xpcall"]=true,
 	-- roblox task
-	"wait","delay","spawn","task_wait","task_delay","task_spawn","task_defer",
+	["wait"]=true,["delay"]=true,["spawn"]=true,["task_wait"]=true,["task_delay"]=true,["task_spawn"]=true,["task_defer"]=true,
 	-- vector / CFrame
-	"vec2","vec3","cframe","cf_angles","cf_lookat","color3","color3_rgb","color3_hsv",
-	"udim","udim2","rect","region3","ray",
+	["vec2"]=true,["vec3"]=true,["cframe"]=true,["cf_angles"]=true,["cf_lookat"]=true,["color3"]=true,["color3_rgb"]=true,["color3_hsv"]=true,
+	["udim"]=true,["udim2"]=true,["rect"]=true,["region3"]=true,["ray"]=true,
 	-- signal
-	"connect","disconnect","fire","wait_signal","once_signal","debounce","throttle",
+	["connect"]=true,["disconnect"]=true,["fire"]=true,["wait_signal"]=true,["once_signal"]=true,["debounce"]=true,["throttle"]=true,
 	-- utility
-	"pipe","compose","curry","partial","flip","identity","noop","memo","once_fn",
-	"uuid","hash","timestamp","encode_json","decode_json",
+	["pipe"]=true,["compose"]=true,["curry"]=true,["partial"]=true,["flip"]=true,["identity"]=true,["noop"]=true,["memo"]=true,["once_fn"]=true,
+	["uuid"]=true,["hash"]=true,["timestamp"]=true,["encode_json"]=true,["decode_json"]=true,
 }
 
 -- ── Built-in variables / constants ──────────────────────────────────────────
 local NEB_BUILTIN_VARS = {
 	-- roblox globals
-	"game","workspace","script","plugin","shared","_G","_VERSION","_ENV",
+	["game"]=true,["workspace"]=true,["script"]=true,["plugin"]=true,["shared"]=true,["_G"]=true,["_VERSION"]=true,["_ENV"]=true,
 	-- math constants
-	"PI","TAU","E","PHI","INF","NAN","MAXINT","MININT","EPSILON","SQRT2","SQRT3",
+	["PI"]=true,["TAU"]=true,["E"]=true,["PHI"]=true,["INF"]=true,["NAN"]=true,["MAXINT"]=true,["MININT"]=true,["EPSILON"]=true,["SQRT2"]=true,["SQRT3"]=true,
 	-- colour constants
-	"RED","GREEN","BLUE","WHITE","BLACK","YELLOW","CYAN","MAGENTA",
-	"TRANSPARENT","GRAY","ORANGE","PURPLE","PINK","LIME","TEAL","INDIGO",
+	["RED"]=true,["GREEN"]=true,["BLUE"]=true,["WHITE"]=true,["BLACK"]=true,["YELLOW"]=true,["CYAN"]=true,["MAGENTA"]=true,
+	["TRANSPARENT"]=true,["GRAY"]=true,["ORANGE"]=true,["PURPLE"]=true,["PINK"]=true,["LIME"]=true,["TEAL"]=true,["INDIGO"]=true,
 	-- vector constants
-	"ZERO","ONE","UP","DOWN","LEFT","RIGHT","FORWARD","BACK",
-	"ZERO2","ONE2","ZERO3","ONE3","X_AXIS","Y_AXIS","Z_AXIS",
+	["ZERO"]=true,["ONE"]=true,["UP"]=true,["DOWN"]=true,["LEFT"]=true,["RIGHT"]=true,["FORWARD"]=true,["BACK"]=true,
+	["ZERO2"]=true,["ONE2"]=true,["ZERO3"]=true,["ONE3"]=true,["X_AXIS"]=true,["Y_AXIS"]=true,["Z_AXIS"]=true,
 	-- time / frame
-	"TIME","DELTA","TICK","CLOCK","FRAMERATE","FRAME","DT",
+	["TIME"]=true,["DELTA"]=true,["TICK"]=true,["CLOCK"]=true,["FRAMERATE"]=true,["FRAME"]=true,["DT"]=true,
 	-- special
-	"NULL","VOID","TRUE","FALSE","SELF","SUPER","ENV","ARGS","ARGV",
+	["NULL"]=true,["VOID"]=true,["TRUE"]=true,["FALSE"]=true,["SELF"]=true,["SUPER"]=true,["ENV"]=true,["ARGS"]=true,["ARGV"]=true,
 }
 
 -- ── Unique NebScript operators ───────────────────────────────────────────────
@@ -455,13 +455,13 @@ local TT = {
 }
 
 local function isNebKeyword(w)
-	for _,k in ipairs(NEB_KEYWORDS) do if k==w then return true end end
+	return NEB_KEYWORDS[w] == true
 end
 local function isNebBuiltin(w)
-	for _,b in ipairs(NEB_BUILTINS) do if b==w then return true end end
+	return NEB_BUILTINS[w] == true
 end
 local function isNebBuiltinVar(w)
-	for _,v in ipairs(NEB_BUILTIN_VARS) do if v==w then return true end end
+	return NEB_BUILTIN_VARS[w] == true
 end
 
 -- Produce a flat token list from source
@@ -474,35 +474,35 @@ local function tokenise(src, lang)
 	-- language-specific keyword sets
 	local kwSet, blSet
 	if lang=="rbxpy" then
-		kwSet = {if_=1,elif=1,else_=1,for_=1,while_=1,def=1,class_=1,
-		         return_=1,import=1,from=1,as=1,try=1,except=1,finally=1,
-		         with=1,pass=1,break_=1,continue_=1,and_=1,or_=1,not_=1,
-		         in=1,is=1,None=1,True=1,False=1,lambda=1,yield=1,
-		         global=1,nonlocal=1,raise=1,del=1,assert=1,async=1,await=1,
-		         match=1,case=1}
-		blSet = {print=1,len=1,range=1,type=1,str=1,int=1,float=1,
-		         bool=1,list=1,dict=1,tuple=1,set=1,zip=1,enumerate=1,
-		         map=1,filter=1,sorted=1,reversed=1,sum=1,min=1,max=1,
-		         abs=1,round=1,isinstance=1,hasattr=1,getattr=1,setattr=1,
-		         super=1,property=1,staticmethod=1,classmethod=1}
+		kwSet = {["if"]=true,["elif"]=true,["else"]=true,["for"]=true,["while"]=true,["def"]=true,["class"]=true,
+			["return"]=true,["import"]=true,["from"]=true,["as"]=true,["try"]=true,["except"]=true,["finally"]=true,
+			["with"]=true,["pass"]=true,["break"]=true,["continue"]=true,["and"]=true,["or"]=true,["not"]=true,
+			["in"]=true,["is"]=true,["None"]=true,["True"]=true,["False"]=true,["lambda"]=true,["yield"]=true,
+			["global"]=true,["nonlocal"]=true,["raise"]=true,["del"]=true,["assert"]=true,["async"]=true,["await"]=true,
+			["match"]=true,["case"]=true}
+		blSet = {["print"]=true,["len"]=true,["range"]=true,["type"]=true,["str"]=true,["int"]=true,["float"]=true,
+			["bool"]=true,["list"]=true,["dict"]=true,["tuple"]=true,["set"]=true,["zip"]=true,["enumerate"]=true,
+			["map"]=true,["filter"]=true,["sorted"]=true,["reversed"]=true,["sum"]=true,["min"]=true,["max"]=true,
+			["abs"]=true,["round"]=true,["isinstance"]=true,["hasattr"]=true,["getattr"]=true,["setattr"]=true,
+			["super"]=true,["property"]=true,["staticmethod"]=true,["classmethod"]=true}
 	elseif lang=="typerbx" then
-		kwSet = {const=1,let=1,var=1,function_=1,class_=1,interface=1,
-		         type=1,enum=1,if_=1,else_=1,for_=1,while_=1,do_=1,
-		         return_=1,import=1,export=1,from=1,as=1,extends=1,
-		         implements=1,new=1,this=1,super=1,typeof=1,instanceof=1,
-		         in=1,of=1,break_=1,continue_=1,try=1,catch=1,finally=1,
-		         throw=1,async=1,await=1,public=1,private=1,protected=1,
-		         readonly=1,static=1,abstract=1,override=1,null=1,
-		         undefined=1,true_=1,false_=1,void=1,never=1,any=1,
-		         string_=1,number=1,boolean=1,keyof=1,infer=1,namespace=1,
-		         declare=1,module=1,satisfies=1}
-		blSet = {console=1,Math=1,Object=1,Array=1,String=1,Number=1,
-		         Boolean=1,Promise=1,JSON=1,Map=1,Set=1,Date=1,
-		         setTimeout=1,setInterval=1,clearTimeout=1,fetch=1,
-		         require=1,module_=1,exports=1,Symbol=1,Reflect=1,Proxy=1}
+		kwSet = {["const"]=true,["let"]=true,["var"]=true,["function"]=true,["class"]=true,["interface"]=true,
+			["type"]=true,["enum"]=true,["if"]=true,["else"]=true,["for"]=true,["while"]=true,["do"]=true,
+			["return"]=true,["import"]=true,["export"]=true,["from"]=true,["as"]=true,["extends"]=true,
+			["implements"]=true,["new"]=true,["this"]=true,["super"]=true,["typeof"]=true,["instanceof"]=true,
+			["in"]=true,["of"]=true,["break"]=true,["continue"]=true,["try"]=true,["catch"]=true,["finally"]=true,
+			["throw"]=true,["async"]=true,["await"]=true,["public"]=true,["private"]=true,["protected"]=true,
+			["readonly"]=true,["static"]=true,["abstract"]=true,["override"]=true,["null"]=true,
+			["undefined"]=true,["true"]=true,["false"]=true,["void"]=true,["never"]=true,["any"]=true,
+			["string"]=true,["number"]=true,["boolean"]=true,["keyof"]=true,["infer"]=true,["namespace"]=true,
+			["declare"]=true,["module"]=true,["satisfies"]=true}
+		blSet = {["console"]=true,["Math"]=true,["Object"]=true,["Array"]=true,["String"]=true,["Number"]=true,
+			["Boolean"]=true,["Promise"]=true,["JSON"]=true,["Map"]=true,["Set"]=true,["Date"]=true,
+			["setTimeout"]=true,["setInterval"]=true,["clearTimeout"]=true,["fetch"]=true,
+			["require"]=true,["module"]=true,["exports"]=true,["Symbol"]=true,["Reflect"]=true,["Proxy"]=true}
 	else -- neb
-		kwSet={}; for _,k in ipairs(NEB_KEYWORDS) do kwSet[k]=true end
-		blSet={}; for _,b in ipairs(NEB_BUILTINS) do blSet[b]=true end
+		kwSet=NEB_KEYWORDS
+		blSet=NEB_BUILTINS
 	end
 
 	local function addTok(type_,val,extraLine)
@@ -516,10 +516,10 @@ local function tokenise(src, lang)
 		if ch=="\n" then
 			addTok(TT.NEWLINE,"\n"); line=line+1; adv()
 
-		-- whitespace
+			-- whitespace
 		elseif ch==" " or ch=="\t" or ch=="\r" then adv()
 
-		-- Lua block comment --[[
+			-- Lua block comment --[[
 		elseif ch=="-" and s(1,3)=="--[" and (s(3,3)=="[" or s(3,3)=="=") then
 			local start=i; local level=0
 			local j=i+2
@@ -539,13 +539,13 @@ local function tokenise(src, lang)
 				addTok(TT.COMMENT,src:sub(start,i-1))
 			end
 
-		-- line comment -- or //
+			-- line comment -- or //
 		elseif (ch=="-" and s(1,1)=="-") or (ch=="/" and s(1,1)=="/") then
 			local start=i; adv(2)
 			while i<=n and c()~="\n" do adv() end
 			addTok(TT.COMMENT,src:sub(start,i-1))
 
-		-- block comment /* */
+			-- block comment /* */
 		elseif ch=="/" and s(1,1)=="*" then
 			local start=i; adv(2)
 			while i<=n do
@@ -554,7 +554,7 @@ local function tokenise(src, lang)
 			end
 			addTok(TT.COMMENT,src:sub(start,i-1))
 
-		-- Lua long string [[ or [==[
+			-- Lua long string [[ or [==[
 		elseif ch=="[" and (s(1,1)=="[" or s(1,1)=="=") then
 			local level=0; local j=i+1
 			while j<=n and src:sub(j,j)=="=" do level=level+1; j=j+1 end
@@ -569,7 +569,7 @@ local function tokenise(src, lang)
 				else addTok(TT.STRING,src:sub(i)); i=n+1 end
 			else addTok(TT.PUNCT,"["); adv() end
 
-		-- strings
+			-- strings
 		elseif ch=='"' or ch=="'" or ch=="`" then
 			local q=ch; local start=i; adv()
 			local val=q
@@ -582,7 +582,7 @@ local function tokenise(src, lang)
 			end
 			addTok(TT.STRING,val)
 
-		-- numbers  (0x hex, 0b bin, 0o oct, decimal with _ separators)
+			-- numbers  (0x hex, 0b bin, 0o oct, decimal with _ separators)
 		elseif ch:match("%d") or (ch=="." and s(1,1):match("%d")) then
 			local start=i
 			if ch=="0" and (s(1,1)=="x" or s(1,1)=="X") then
@@ -593,7 +593,7 @@ local function tokenise(src, lang)
 				adv(2); while i<=n and c():match("[0-7_]") do adv() end
 			else
 				while i<=n and (c():match("[%d_]") or
-				      (c()=="." and s(1,1):match("%d") and not src:sub(i-1,i-1):match("%d%.%d"))) do adv() end
+					(c()=="." and s(1,1):match("%d") and not src:sub(i-1,i-1):match("%d%.%d"))) do adv() end
 				if c()=="e" or c()=="E" then
 					adv()
 					if c()=="+" or c()=="-" then adv() end
@@ -606,13 +606,13 @@ local function tokenise(src, lang)
 			end
 			addTok(TT.NUMBER,src:sub(start,i-1))
 
-		-- macro @
+			-- macro @
 		elseif ch=="@" then
 			local start=i; adv()
 			while i<=n and c():match("[%w_]") do adv() end
 			addTok(TT.MACRO,src:sub(start,i-1))
 
-		-- identifier / keyword / builtin
+			-- identifier / keyword / builtin
 		elseif ch:match("[%a_]") then
 			local start=i
 			while i<=n and c():match("[%w_]") do adv() end
@@ -622,7 +622,7 @@ local function tokenise(src, lang)
 			elseif lang=="neb" and isNebBuiltinVar(w) then addTok(TT.BUILTIN_VAR,w)
 			else addTok(TT.IDENT,w) end
 
-		-- operators (try longest match first, up to 4 chars)
+			-- operators (try longest match first, up to 4 chars)
 		elseif ch:match("[%+%-%*/%%<>=!&|%.%?:^~#$]") then
 			local best=""
 			for len=4,1,-1 do
@@ -635,7 +635,7 @@ local function tokenise(src, lang)
 			if best~="" then addTok(TT.OPERATOR,best); adv(#best)
 			else addTok(TT.OPERATOR,ch); adv() end
 
-		-- punctuation
+			-- punctuation
 		elseif ch:match("[%(%)%[%]{}%;,]") then
 			addTok(TT.PUNCT,ch); adv()
 
@@ -741,15 +741,14 @@ __neb.id=function(x)return x end;__neb.noop=function()end
 local PI,TAU,E,PHI=math.pi,math.pi*2,math.exp(1),(1+math.sqrt(5))/2
 local INF,EPSILON=math.huge,1e-10
 local ZERO,ONE=Vector3.zero,Vector3.one
-local UP,DOWN,LEFT,RIGHT,FORWARD,BACK=Vector3.new(0,1,0),Vector3.new(0,-1,0),
-  Vector3.new(-1,0,0),Vector3.new(1,0,0),Vector3.new(0,0,-1),Vector3.new(0,0,1)
+local UP,DOWN,LEFT,RIGHT,FORWARD,BACK=Vector3.new(0,1,0),Vector3.new(0,-1,0),Vector3.new(-1,0,0),Vector3.new(1,0,0),Vector3.new(0,0,-1),Vector3.new(0,0,1)
 local function clamp(v,lo,hi)return math.max(lo,math.min(hi,v))end
 local function lerp(a,b,t)return a+(b-a)*t end
 local function sign(x)return x>0 and 1 or x<0 and -1 or 0 end
 local function round(x,d)local m=10^(d or 0);return math.floor(x*m+.5)/m end
 local function map_range(v,a,b,c,d)return c+(v-a)*(d-c)/(b-a)end
 --[[ End NebScript Runtime ]]
-]]
+--]]
 
 local function compileNebScript(src)
 	local out = src
@@ -877,8 +876,8 @@ local function compileNebScript(src)
 		local params=table.concat(fields,",")
 		local init={}; for _,f in ipairs(fields) do init[#init+1]=f.."="..f end
 		return ("local %s={} %s.__index=%s\n"):format(name,name,name)..
-		       ("function %s.new(%s) return setmetatable({%s},%s) end"):format(
-		       name,params,table.concat(init,","),name)
+			("function %s.new(%s) return setmetatable({%s},%s) end"):format(
+				name,params,table.concat(init,","),name)
 	end)
 
 	-- ── 16. class ... extends ... / class ...  ────────────────────────────────
@@ -905,9 +904,9 @@ local function compileNebScript(src)
 	-- ── 20. try / catch  ──────────────────────────────────────────────────────
 	out = out:gsub("try%s*(%b{})%s*catch%s*%(([^%)]+)%)%s*(%b{})",
 		function(tbody,evar,cbody)
-		return "local __ok,__err=pcall(function()\n"..tbody:sub(2,#tbody-1).."\nend)\n"..
-		       "if not __ok then\nlocal "..evar:match("^%s*(.-)%s*$").."=__err\n"..cbody:sub(2,#cbody-1).."\nend"
-	end)
+			return "local __ok,__err=pcall(function()\n"..tbody:sub(2,#tbody-1).."\nend)\n"..
+				"if not __ok then\nlocal "..evar:match("^%s*(.-)%s*$").."=__err\n"..cbody:sub(2,#cbody-1).."\nend"
+		end)
 	out = out:gsub("%f[%a]throw%f[%A]", "error")
 	out = out:gsub("%f[%a]raise%f[%A]", "error")
 
@@ -1012,183 +1011,95 @@ local function compileRbxPython(src)
 	for _, rawLine in ipairs(lines) do
 		local ind     = getInd(rawLine)
 		local stripped= rawLine:match("^%s*(.-)%s*$")
+		local prefix  = rawLine:match("^( *)")
 
-		if stripped=="" then out[#out+1]=""; goto continue end
+		if stripped == "" then
+			out[#out+1] = ""
+		else
+			closeBlocks(ind)
 
-		closeBlocks(ind)
+			local fname, parms   = stripped:match("^def%s+([%a_][%w_]*)%((.-)%)%s*:")
+			local cname          = stripped:match("^class%s+([%a_][%w_]*)%s*:")
+			local cname2, cbase2 = stripped:match("^class%s+([%a_][%w_]*)%(([^%)]+)%)%s*:")
+			if cname2 then cname = cname2 end
+			local ifcond   = stripped:match("^if%s+(.+):")
+			local elifcond = stripped:match("^elif%s+(.+):")
+			local whcond   = stripped:match("^while%s+(.+):")
+			local rv       = stripped:match("^return%s*(.*)")
+			local errmsg   = stripped:match("^raise%s+(.*)")
+			local evar     = stripped:match("^except%s+[%a_%.]+%s+as%s+([%a_][%w_]*)%s*:")
+			local bareEx   = stripped:match("^except%s*:")
+			local withExpr, withVar = stripped:match("^with%s+(.-)%s+as%s+([%a_][%w_]*)%s*:")
+			local fv3,fa3,fb3,fs3 = stripped:match("^for%s+([%a_][%w_]*)%s+in%s+range%(([^,%)]+)%s*,%s*([^,%)]+)%s*,%s*([^%)]+)%)%s*:")
+			local fv2,fa2,fb2     = stripped:match("^for%s+([%a_][%w_]*)%s+in%s+range%(([^,%)]+)%s*,%s*([^%)]+)%)%s*:")
+			local fv1,fa1         = stripped:match("^for%s+([%a_][%w_]*)%s+in%s+range%(([^%)]+)%)%s*:")
+			local fk,fvkv,fkvd   = stripped:match("^for%s+([%a_][%w_]*)%s*,%s*([%a_][%w_]*)%s+in%s+([%a_][%w_%.%(%)]+)%.items%(%)%s*:")
+			local fiv,fit         = stripped:match("^for%s+([%a_][%w_]*)%s+in%s+([%a_][%w_%.%(%)]+)%s*:")
+			local compE,compV,compI = stripped:match("%[(.-)%s+for%s+([%a_][%w_]*)%s+in%s+(.-)%]")
 
-		local prefix=rawLine:match("^( *)")
-
-		-- # comment
-		if stripped:sub(1,1)=="#" then
-			out[#out+1]=prefix.."--"..stripped:sub(2)
-			goto continue
-		end
-
-		-- def name(params):
-		do
-			local fname,parms=stripped:match("^def%s+([%a_][%w_]*)%((.-)%)%s*:")
-			if fname then
-				local luaParams=parms:gsub("self,?%s*",""):gsub("%*([%a_][%w_]*)","...")
-				out[#out+1]=prefix.."function "..fname.."("..luaParams..")"
-				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="def"
-				goto continue
+			if stripped:sub(1,1) == "#" then
+				out[#out+1] = prefix .. "--" .. stripped:sub(2)
+			elseif fname then
+				local lp = parms:gsub("self,?%s*",""):gsub("%*([%a_][%w_]*)","...")
+				out[#out+1] = prefix .. "function " .. fname .. "(" .. lp .. ")"
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "def"
+			elseif cname2 then
+				out[#out+1] = prefix.."local "..cname2.."=setmetatable({},{__index="..cbase2.."}) "..cname2..".__index="..cname2
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "class"
+			elseif cname then
+				out[#out+1] = prefix.."local "..cname.."={} "..cname..".__index="..cname
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "class"
+			elseif ifcond then
+				out[#out+1] = prefix .. "if " .. py2lua(ifcond) .. " then"
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "if"
+			elseif elifcond then
+				out[#out+1] = prefix .. "elseif " .. py2lua(elifcond) .. " then"
+			elseif stripped:match("^else%s*:") then
+				out[#out+1] = prefix .. "else"
+			elseif fv3 then
+				out[#out+1] = prefix.."for "..fv3.."="..py2lua(fa3)..","..py2lua(fb3)..","..py2lua(fs3).." do"
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "for"
+			elseif fv2 then
+				out[#out+1] = prefix.."for "..fv2.."="..py2lua(fa2)..","..py2lua(fb2).." do"
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "for"
+			elseif fv1 then
+				out[#out+1] = prefix.."for "..fv1.."=1,"..py2lua(fa1).." do"
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "for"
+			elseif fk then
+				out[#out+1] = prefix.."for "..fk..","..fvkv.." in pairs("..fkvd..")".. " do"
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "for"
+			elseif fiv then
+				out[#out+1] = prefix.."for _,"..fiv.." in ipairs("..fit..")".. " do"
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "for"
+			elseif whcond then
+				out[#out+1] = prefix .. "while " .. py2lua(whcond) .. " do"
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "while"
+			elseif stripped == "try:" then
+				out[#out+1] = prefix .. "local __ok,__err=pcall(function()"
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "try_pcall"
+			elseif evar or bareEx then
+				out[#out+1] = prefix .. "local " .. (evar or "__err") .. "=__err"
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "except"
+			elseif stripped == "finally:" then
+				out[#out+1] = prefix .. "-- [finally]"
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "finally"
+			elseif withExpr then
+				out[#out+1] = prefix .. "do local " .. withVar .. "=" .. py2lua(withExpr)
+				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "with"
+			elseif stripped == "pass" then
+				out[#out+1] = prefix .. "-- pass"
+			elseif rv ~= nil then
+				out[#out+1] = prefix .. "return " .. py2lua(rv)
+			elseif errmsg then
+				out[#out+1] = prefix .. "error(" .. py2lua(errmsg) .. ")"
+			elseif compE then
+				local conv = stripped:gsub("%[(.-)%s+for%s+([%a_][%w_]*)%s+in%s+(.-)%]",
+					function(e,vv,ii) return "{}--[[comprehension: "..e.." for "..vv.." in "..ii.."]]" end)
+				out[#out+1] = prefix .. py2lua(conv)
+			else
+				out[#out+1] = prefix .. py2lua(stripped)
 			end
 		end
-
-		-- class Name(Base): or class Name:
-		do
-			local cname,cbase=stripped:match("^class%s+([%a_][%w_]*)%(([^%)]+)%)%s*:")
-			if not cname then cname=stripped:match("^class%s+([%a_][%w_]*)%s*:") end
-			if cname then
-				if cbase then
-					out[#out+1]=prefix.."local "..cname.."=setmetatable({},{__index="..cbase.."}) "..cname..".__index="..cname
-				else
-					out[#out+1]=prefix.."local "..cname.."={} "..cname..".__index="..cname
-				end
-				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="class"
-				goto continue
-			end
-		end
-
-		-- if cond:
-		do
-			local cond=stripped:match("^if%s+(.+):")
-			if cond then
-				out[#out+1]=prefix.."if "..py2lua(cond).." then"
-				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="if"
-				goto continue
-			end
-		end
-
-		-- elif cond:
-		do
-			local cond=stripped:match("^elif%s+(.+):")
-			if cond then
-				out[#out+1]=prefix.."elseif "..py2lua(cond).." then"
-				goto continue
-			end
-		end
-
-		-- else:
-		if stripped:match("^else%s*:") then
-			out[#out+1]=prefix.."else"; goto continue
-		end
-
-		-- for x in range(n): / for x in range(a,b): / for x in range(a,b,s):
-		do
-			local v,a,b,step=stripped:match("^for%s+([%a_][%w_]*)%s+in%s+range%(([^,%)]+)%s*,%s*([^,%)]+)%s*,%s*([^%)]+)%)%s*:")
-			if v then
-				out[#out+1]=prefix.."for "..v.."="..py2lua(a)..","..py2lua(b)..","..py2lua(step).." do"
-				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="for"; goto continue
-			end
-			v,a,b=stripped:match("^for%s+([%a_][%w_]*)%s+in%s+range%(([^,%)]+)%s*,%s*([^%)]+)%)%s*:")
-			if v then
-				out[#out+1]=prefix.."for "..v.."="..py2lua(a)..","..py2lua(b).." do"
-				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="for"; goto continue
-			end
-			v,a=stripped:match("^for%s+([%a_][%w_]*)%s+in%s+range%(([^%)]+)%)%s*:")
-			if v then
-				out[#out+1]=prefix.."for "..v.."=1,"..py2lua(a).." do"
-				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="for"; goto continue
-			end
-		end
-
-		-- for k, v in dict.items():
-		do
-			local k,v,d=stripped:match("^for%s+([%a_][%w_]*)%s*,%s*([%a_][%w_]*)%s+in%s+([%a_][%w_%.%(%)]+)%.items%(%)%s*:")
-			if k then
-				out[#out+1]=prefix.."for "..k..","..v.." in pairs("..d..") do"
-				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="for"; goto continue
-			end
-		end
-
-		-- for x in iterable:
-		do
-			local v,it=stripped:match("^for%s+([%a_][%w_]*)%s+in%s+([%a_][%w_%.%(%)]+)%s*:")
-			if v then
-				out[#out+1]=prefix.."for _,"..v.." in ipairs("..it..") do"
-				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="for"; goto continue
-			end
-		end
-
-		-- while cond:
-		do
-			local cond=stripped:match("^while%s+(.+):")
-			if cond then
-				out[#out+1]=prefix.."while "..py2lua(cond).." do"
-				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="while"
-				goto continue
-			end
-		end
-
-		-- try:
-		if stripped=="try:" then
-			out[#out+1]=prefix.."local __ok,__err=pcall(function()"
-			indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="try_pcall"
-			goto continue
-		end
-
-		-- except (Exception as e): / except:
-		do
-			local evar=stripped:match("^except%s+[%a_%.]+%s+as%s+([%a_][%w_]*)%s*:")
-			local bare=stripped:match("^except%s*:")
-			if evar or bare then
-				out[#out+1]=prefix.."local "..(evar or "__err").."=__err"
-				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="except"
-				goto continue
-			end
-		end
-
-		-- finally:
-		if stripped=="finally:" then
-			out[#out+1]=prefix.."-- [finally]"
-			indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="finally"
-			goto continue
-		end
-
-		-- with expr as var:
-		do
-			local expr,var=stripped:match("^with%s+(.-)%s+as%s+([%a_][%w_]*)%s*:")
-			if expr then
-				out[#out+1]=prefix.."do local "..var.."="..py2lua(expr)
-				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="with"
-				goto continue
-			end
-		end
-
-		-- pass
-		if stripped=="pass" then out[#out+1]=prefix.."-- pass"; goto continue end
-
-		-- return
-		do
-			local rv=stripped:match("^return%s*(.*)")
-			if rv~=nil then out[#out+1]=prefix.."return "..py2lua(rv); goto continue end
-		end
-
-		-- raise / assert
-		do
-			local msg=stripped:match("^raise%s+(.*)")
-			if msg then out[#out+1]=prefix.."error("..py2lua(msg)..")"; goto continue end
-		end
-
-		-- list comprehension  [expr for x in iter]  →  __neb.map(iter, fn)
-		do
-			local expr,v,it=stripped:match("%[(.-)%s+for%s+([%a_][%w_]*)%s+in%s+(.-)%]")
-			if expr then
-				-- approximate
-				local converted=stripped:gsub("%[(.-)%s+for%s+([%a_][%w_]*)%s+in%s+(.-)%]",
-					function(e,vv,iit)
-						return "{}--[[comprehension: "..e.." for "..vv.." in "..iit.."]]"
-					end)
-				out[#out+1]=prefix..py2lua(converted); goto continue
-			end
-		end
-
-		-- generic line
-		out[#out+1]=prefix..py2lua(stripped)
-
-		::continue::
 	end
 
 	closeBlocks(0)
@@ -1232,7 +1143,7 @@ local function compileTypeRbx(src)
 
 	-- ── 6. Visibility modifiers → strip  ─────────────────────────────────────
 	for _,mod in ipairs({"public","private","protected","readonly","static",
-	                     "abstract","override","declare","export default","export"}) do
+		"abstract","override","declare","export default","export"}) do
 		out=out:gsub("%f[%a]"..mod:gsub(" ","%%s+").."%f[%A]%s*","")
 	end
 
@@ -1298,9 +1209,9 @@ local function compileTypeRbx(src)
 	-- ── 16. try / catch / finally  ───────────────────────────────────────────
 	out=out:gsub("try%s*(%b{})%s*catch%s*%(([^%)]+)%)%s*(%b{})",
 		function(tbody,evar,cbody)
-		return "local __ok,__err=pcall(function()\n"..tbody:sub(2,#tbody-1).."\nend)\n"..
-		       "if not __ok then\nlocal "..evar:match("[%a_][%w_]*").."=__err\n"..cbody:sub(2,#cbody-1).."\nend"
-	end)
+			return "local __ok,__err=pcall(function()\n"..tbody:sub(2,#tbody-1).."\nend)\n"..
+				"if not __ok then\nlocal "..evar:match("[%a_][%w_]*").."=__err\n"..cbody:sub(2,#cbody-1).."\nend"
+		end)
 	out=out:gsub("throw%s+new%s+[%a_][%w_]*%(([^%)]+)%)", "error(%1)")
 	out=out:gsub("%f[%a]throw%f[%A]%s+","error(")
 
@@ -2593,38 +2504,38 @@ refreshFileTree = function()
 			btn.MouseButton2Click:Connect(function()
 				showDropdown("📄 "..node.name.." ›",
 					{"Open","Change Language","Rename","Duplicate","Compile","Delete"}, function(choice)
-					if choice=="Open" then
-						openTab(node)
-					elseif choice=="Change Language" then
-						showDropdown("Select Language",{"NebScript","RbxPython","TypeRbx","Markdown","PlainText"},function(lang)
-							local m={NebScript="neb",RbxPython="rbxpy",TypeRbx="typerbx",Markdown="md",PlainText="txt"}
-							node.lang=m[lang] or "neb"; refreshFileTree(); saveProject()
-							toast("Language changed to "..lang,"info")
-						end)
-					elseif choice=="Rename" then
-						showInputDialog("Rename File",node.name,function(name)
-							if name and name~="" then fsRename(node,name); refreshFileTree(); saveProject() end
-						end)
-					elseif choice=="Duplicate" then
-						local newNode=fsNode("file",node.name.."_copy",node.parent,{lang=node.lang,content=node.content})
-						refreshFileTree(); saveProject()
-						toast("Duplicated","success")
-					elseif choice=="Compile" then
-						saveActiveContent()
-						local inst,err=compileAndOutput(node)
-						if inst then toast("Compiled → "..inst.Name,"success")
-						else toast(tostring(err),"error") end
-					elseif choice=="Delete" then
-						showConfirm("Delete '"..node.name.."'?",function(y)
-							if y then
-								local _,ti=findTabInfo(node)
-								if ti then closeTab(node) end
-								fsRemove(node); refreshFileTree(); saveProject()
-								toast("Deleted","warn")
-							end
-						end)
-					end
-				end)
+						if choice=="Open" then
+							openTab(node)
+						elseif choice=="Change Language" then
+							showDropdown("Select Language",{"NebScript","RbxPython","TypeRbx","Markdown","PlainText"},function(lang)
+								local m={NebScript="neb",RbxPython="rbxpy",TypeRbx="typerbx",Markdown="md",PlainText="txt"}
+								node.lang=m[lang] or "neb"; refreshFileTree(); saveProject()
+								toast("Language changed to "..lang,"info")
+							end)
+						elseif choice=="Rename" then
+							showInputDialog("Rename File",node.name,function(name)
+								if name and name~="" then fsRename(node,name); refreshFileTree(); saveProject() end
+							end)
+						elseif choice=="Duplicate" then
+							local newNode=fsNode("file",node.name.."_copy",node.parent,{lang=node.lang,content=node.content})
+							refreshFileTree(); saveProject()
+							toast("Duplicated","success")
+						elseif choice=="Compile" then
+							saveActiveContent()
+							local inst,err=compileAndOutput(node)
+							if inst then toast("Compiled → "..inst.Name,"success")
+							else toast(tostring(err),"error") end
+						elseif choice=="Delete" then
+							showConfirm("Delete '"..node.name.."'?",function(y)
+								if y then
+									local _,ti=findTabInfo(node)
+									if ti then closeTab(node) end
+									fsRemove(node); refreshFileTree(); saveProject()
+									toast("Deleted","warn")
+								end
+							end)
+						end
+					end)
 			end)
 		end
 	end
@@ -2920,10 +2831,10 @@ local function buildUI()
 		if i%3==0 then
 			local function twinkle()
 				tween(star,{BackgroundTransparency=1-(alpha*.3)},math.random()*2+1,
-					Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
+				Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
 				task.delay(math.random()*2+1,function()
 					tween(star,{BackgroundTransparency=1-alpha},math.random()*2+1,
-						Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
+					Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
 					task.delay(math.random()*3+2,twinkle)
 				end)
 			end
