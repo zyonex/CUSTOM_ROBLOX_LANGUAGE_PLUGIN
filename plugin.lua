@@ -603,14 +603,47 @@ local function tokenise(src, lang)
 				if c():match("[uifz]") then
 					local j2=i; while j2<=n and src:sub(j2,j2):match("[%a%d]") do j2=j2+1 end; i=j2
 				end
+			end
+			addTok(TT.NUMBER,src:sub(start,i-1))
 
+		-- macro @
+		elseif ch=="@" then
+			local start=i; adv()
+			while i<=n and c():match("[%w_]") do adv() end
+			addTok(TT.MACRO,src:sub(start,i-1))
+
+		-- identifier / keyword / builtin
+		elseif ch:match("[%a_]") then
+			local start=i
+			while i<=n and c():match("[%w_]") do adv() end
+			local w=src:sub(start,i-1)
+			if kwSet[w] then addTok(TT.KEYWORD,w)
+			elseif blSet[w] then addTok(TT.BUILTIN,w)
+			elseif lang=="neb" and isNebBuiltinVar(w) then addTok(TT.BUILTIN_VAR,w)
+			else addTok(TT.IDENT,w) end
+
+		-- operators (try longest match first, up to 4 chars)
+		elseif ch:match("[%+%-%*/%%<>=!&|%.%?:^~#$]") then
+			local best=""
+			for len=4,1,-1 do
+				local op=src:sub(i,i+len-1)
+				for _,allowed in ipairs(NEB_OPERATORS) do
+					if op==allowed then best=op; break end
+				end
+				if best~="" then break end
+			end
+			if best~="" then addTok(TT.OPERATOR,best); adv(#best)
+			else addTok(TT.OPERATOR,ch); adv() end
+
+		-- punctuation
+		elseif ch:match("[%(%)%[%]{}%;,]") then
+			addTok(TT.PUNCT,ch); adv()
 
 		else adv() end
 	end
 	addTok(TT.EOF,"")
-	return tokens	
+	return tokens
 end
-
 -- ════════════════════════════════════════════════════════════════════════════
 --  SYNTAX HIGHLIGHTER
 --  Returns RichText-marked-up string for a single line
@@ -2101,4 +2134,1282 @@ end
 local function registerUserModule(name, content)
 	USER_MODULES[name] = content or ("-- Module: "..name.."\nlocal M={}\n\nreturn M\n")
 end
-	
+-- ════════════════════════════════════════════════════════════════════════════
+--  UI PRIMITIVES
+-- ════════════════════════════════════════════════════════════════════════════
+local function mkFrame(props)
+	local f=Instance.new("Frame"); f.BorderSizePixel=0; f.BackgroundTransparency=0
+	for k,v in pairs(props or{})do pcall(function()f[k]=v end)end; return f
+end
+local function mkText(props)
+	local t=Instance.new("TextLabel"); t.BorderSizePixel=0; t.BackgroundTransparency=1
+	t.Font=Enum.Font.RobotoMono; t.TextSize=13; t.TextXAlignment=Enum.TextXAlignment.Left
+	t.TextColor3=T.TXT_PRIMARY
+	for k,v in pairs(props or{})do pcall(function()t[k]=v end)end; return t
+end
+local function mkBtn(props)
+	local b=Instance.new("TextButton"); b.BorderSizePixel=0; b.AutoButtonColor=false
+	b.Font=Enum.Font.RobotoMono; b.TextSize=13; b.TextColor3=T.TXT_PRIMARY
+	for k,v in pairs(props or{})do pcall(function()b[k]=v end)end; return b
+end
+local function mkBox(props)
+	local b=Instance.new("TextBox"); b.BorderSizePixel=0; b.ClearTextOnFocus=false
+	b.Font=Enum.Font.RobotoMono; b.TextSize=13; b.TextColor3=T.TXT_PRIMARY
+	b.BackgroundColor3=T.BG_INPUT; b.PlaceholderColor3=T.TXT_MUTED
+	b.TextXAlignment=Enum.TextXAlignment.Left
+	for k,v in pairs(props or{})do pcall(function()b[k]=v end)end; return b
+end
+local function mkScroll(props)
+	local s=Instance.new("ScrollingFrame"); s.BorderSizePixel=0
+	s.ScrollBarThickness=5; s.ScrollBarImageColor3=T.NEBULA_DUST
+	s.CanvasSize=UDim2.new(0,0,0,0); s.AutomaticCanvasSize=Enum.AutomaticSize.Y
+	for k,v in pairs(props or{})do pcall(function()s[k]=v end)end; return s
+end
+local function mkCorner(parent, r)
+	local c=Instance.new("UICorner"); c.CornerRadius=UDim.new(0,r or 6); c.Parent=parent; return c
+end
+local function mkPad(parent,t,b,l,r)
+	local p=Instance.new("UIPadding"); p.PaddingTop=UDim.new(0,t or 4)
+	p.PaddingBottom=UDim.new(0,b or 4); p.PaddingLeft=UDim.new(0,l or 6)
+	p.PaddingRight=UDim.new(0,r or 6); p.Parent=parent; return p
+end
+local function mkList(parent, dir, pad)
+	local l=Instance.new("UIListLayout"); l.FillDirection=dir or Enum.FillDirection.Vertical
+	l.SortOrder=Enum.SortOrder.LayoutOrder; l.Padding=UDim.new(0,pad or 0)
+	l.Parent=parent; return l
+end
+local function mkStroke(parent, col, thick, trans)
+	local s=Instance.new("UIStroke"); s.Color=col or T.BORDER
+	s.Thickness=thick or 1; s.Transparency=trans or 0
+	s.Parent=parent; return s
+end
+local function mkGradient(parent, cols, rot)
+	local g=Instance.new("UIGradient")
+	local kps={}; for i,c in ipairs(cols) do kps[i]=ColorSequenceKeypoint.new((i-1)/(#cols-1),c) end
+	g.Color=ColorSequence.new(kps); g.Rotation=rot or 0; g.Parent=parent; return g
+end
+local function tween(inst,goal,dur,style,dir)
+	local t=TweenService:Create(inst,TweenInfo.new(dur or .2,
+		style or Enum.EasingStyle.Quad, dir or Enum.EasingDirection.Out),goal)
+	t:Play(); return t
+end
+
+-- ── Popup helpers ────────────────────────────────────────────────────────────
+local GUI_ROOT  -- set during buildUI
+local function overlay(zIndex)
+	local o=mkFrame({Size=UDim2.new(1,0,1,0),BackgroundColor3=Color3.new(0,0,0),
+		BackgroundTransparency=0.55,ZIndex=zIndex or 120,Parent=GUI_ROOT})
+	return o
+end
+local function dialog(parent, w, h, zIndex)
+	local d=mkFrame({Size=UDim2.new(0,w,0,h),
+		Position=UDim2.new(.5,-w/2,.5,-h/2),
+		BackgroundColor3=T.BG_SURFACE,ZIndex=(zIndex or 120)+1,Parent=parent})
+	mkCorner(d,10)
+	mkStroke(d,T.NEBULA_PRI,1.5)
+	mkGradient(d,{T.BG_SURFACE,T.BG_ELEVATED},90)
+	return d
+end
+
+local function showInputDialog(title, placeholder, callback)
+	local ov=overlay(); local d=dialog(ov,380,160)
+	mkText({Text=title,Size=UDim2.new(1,-20,0,28),Position=UDim2.new(0,12,0,10),
+		TextColor3=T.NEBULA_PRI,Font=Enum.Font.GothamBold,TextSize=14,ZIndex=d.ZIndex+1,Parent=d})
+	local box=mkBox({Text="",PlaceholderText=placeholder or "",
+		Size=UDim2.new(1,-24,0,34),Position=UDim2.new(0,12,0,46),
+		BackgroundColor3=T.BG_INPUT,ZIndex=d.ZIndex+1,Parent=d})
+	mkCorner(box,6); mkStroke(box,T.NEBULA_DUST,1); mkPad(box,0,0,8,8)
+	local function finish(val) ov:Destroy(); if callback then callback(val) end end
+	local ok=mkBtn({Text="Confirm",Size=UDim2.new(0,110,0,32),Position=UDim2.new(.5,-118,.0,108),
+		BackgroundColor3=T.NEBULA_PRI,TextColor3=T.TXT_WHITE,Font=Enum.Font.GothamBold,TextSize=13,ZIndex=d.ZIndex+1,Parent=d})
+	mkCorner(ok,6)
+	local cancel=mkBtn({Text="Cancel",Size=UDim2.new(0,110,0,32),Position=UDim2.new(.5,8,0,108),
+		BackgroundColor3=T.BG_OVERLAY,TextColor3=T.TXT_DIM,Font=Enum.Font.GothamBold,TextSize=13,ZIndex=d.ZIndex+1,Parent=d})
+	mkCorner(cancel,6)
+	ok.Activated:Connect(function() finish(box.Text) end)
+	cancel.Activated:Connect(function() finish(nil) end)
+	ov.Activated:Connect(function() finish(nil) end)
+	box:CaptureFocus()
+end
+
+local function showDropdown(title, options, callback)
+	local h=50+#options*40
+	local ov=overlay(); local d=dialog(ov,320,h)
+	mkText({Text=title,Size=UDim2.new(1,-20,0,28),Position=UDim2.new(0,12,0,10),
+		TextColor3=T.NEBULA_PRI,Font=Enum.Font.GothamBold,TextSize=14,ZIndex=d.ZIndex+1,Parent=d})
+	local function finish(val) ov:Destroy(); if callback then callback(val) end end
+	for i,opt in ipairs(options) do
+		local btn=mkBtn({Text=opt,Size=UDim2.new(1,-24,0,34),
+			Position=UDim2.new(0,12,0,40+(i-1)*38),
+			BackgroundColor3=T.BG_ELEVATED,TextColor3=T.TXT_PRIMARY,
+			Font=Enum.Font.RobotoMono,TextSize=13,ZIndex=d.ZIndex+1,Parent=d})
+		mkCorner(btn,6)
+		btn.MouseEnter:Connect(function() tween(btn,{BackgroundColor3=T.BG_OVERLAY},.1) end)
+		btn.MouseLeave:Connect(function() tween(btn,{BackgroundColor3=T.BG_ELEVATED},.1) end)
+		btn.Activated:Connect(function() finish(opt) end)
+	end
+end
+
+local function showConfirm(msg, callback)
+	local ov=overlay(); local d=dialog(ov,380,140)
+	mkText({Text=msg,Size=UDim2.new(1,-24,0,68),Position=UDim2.new(0,12,0,10),
+		TextColor3=T.TXT_PRIMARY,TextSize=13,TextWrapped=true,ZIndex=d.ZIndex+1,Parent=d})
+	local function finish(val) ov:Destroy(); if callback then callback(val) end end
+	local yes=mkBtn({Text="Yes, proceed",Size=UDim2.new(0,130,0,32),Position=UDim2.new(.5,-138,0,100),
+		BackgroundColor3=T.RED,TextColor3=T.TXT_WHITE,Font=Enum.Font.GothamBold,TextSize=13,ZIndex=d.ZIndex+1,Parent=d})
+	mkCorner(yes,6)
+	local no=mkBtn({Text="Cancel",Size=UDim2.new(0,110,0,32),Position=UDim2.new(.5,8,0,100),
+		BackgroundColor3=T.BG_OVERLAY,TextColor3=T.TXT_DIM,Font=Enum.Font.GothamBold,TextSize=13,ZIndex=d.ZIndex+1,Parent=d})
+	mkCorner(no,6)
+	yes.Activated:Connect(function() finish(true) end)
+	no.Activated:Connect(function() finish(false) end)
+end
+
+-- ── Toast ────────────────────────────────────────────────────────────────────
+local TOAST_Y = 0
+local function toast(msg, kind)
+	kind=kind or"info"
+	local cols={info=T.NEBULA_PRI,success=T.GREEN,warn=T.GOLD,error=T.RED}
+	local col=cols[kind] or T.NEBULA_PRI
+	TOAST_Y=TOAST_Y+1
+	local lbl=mkText({Text=(" ◈  "..msg.."  "),
+		Size=UDim2.new(0,0,0,34),AutomaticSize=Enum.AutomaticSize.X,
+		Position=UDim2.new(.5,0,1,-(46+((TOAST_Y-1)*42))),AnchorPoint=Vector2.new(.5,0),
+		BackgroundColor3=T.BG_SURFACE,BackgroundTransparency=0,
+		TextColor3=col,Font=Enum.Font.GothamBold,TextSize=12,ZIndex=180,Parent=GUI_ROOT})
+	mkCorner(lbl,8); mkStroke(lbl,col,1.5); mkPad(lbl,0,0,12,12)
+	task.delay(2.8,function()
+		tween(lbl,{BackgroundTransparency=1,TextTransparency=1},.4)
+		task.delay(.45,function() pcall(lbl.Destroy,lbl); TOAST_Y=math.max(0,TOAST_Y-1) end)
+	end)
+end
+
+-- ════════════════════════════════════════════════════════════════════════════
+--  EDITOR STATE
+-- ════════════════════════════════════════════════════════════════════════════
+local openTabs  = {}   -- { node, frame, label, dot (dirty indicator) }
+local activeTab = nil  -- node
+
+local editorBox     = nil   -- TextBox (main editing surface)
+local lineNumScroll = nil
+local editorScroll  = nil
+local sidebarScroll = nil
+local fileTreeCont  = nil
+local statusLangLbl = nil
+local statusLineLbl = nil
+local statusMsgLbl  = nil
+local settingsFrame = nil
+local modulesFrame  = nil
+local problemsFrame = nil
+local problemsCont  = nil
+local searchBar     = nil
+local replaceBar    = nil
+local dragging      = nil  -- node being dragged
+
+local function setStatus(msg, kind)
+	if statusMsgLbl then
+		local cols={info=T.TXT_DIM,success=T.GREEN,warn=T.GOLD,error=T.RED}
+		statusMsgLbl.Text=msg; statusMsgLbl.TextColor3=cols[kind] or T.TXT_DIM
+	end
+end
+
+-- Save active tab content from editor
+local function saveActiveContent()
+	if activeTab and editorBox then
+		local prev=activeTab.content
+		activeTab.content=editorBox.Text
+		if activeTab.content~=prev then activeTab.dirty=true end
+	end
+end
+
+-- Update line numbers
+local function refreshLineNumbers(text)
+	if not lineNumScroll then return end
+	for _,c in ipairs(lineNumScroll:GetChildren()) do
+		if not c:IsA("UIListLayout") and not c:IsA("UIPadding") then c:Destroy() end
+	end
+	local count=0; for _ in (text.."\n"):gmatch("[^\n]*\n") do count=count+1 end
+	local fs=tonumber(S.ed_fontSize) or 14
+	for i=1,count do
+		mkText({Text=tostring(i),Size=UDim2.new(1,0,0,fs+4),
+			TextColor3=T.TXT_MUTED,TextXAlignment=Enum.TextXAlignment.Right,
+			TextSize=fs,Font=Enum.Font.RobotoMono,LayoutOrder=i,Parent=lineNumScroll})
+	end
+end
+
+local function findTabInfo(node)
+	for i,ti in ipairs(openTabs) do if ti.node==node then return i,ti end end
+end
+
+local function refreshTabBar()
+	for _,ti in ipairs(openTabs) do
+		local isAct=ti.node==activeTab
+		tween(ti.frame,{BackgroundColor3=isAct and T.BG_TAB_ACT or T.BG_TAB},.1)
+		ti.label.TextColor3=isAct and T.TXT_BRIGHT or T.TXT_DIM
+		ti.dot.TextColor3=ti.node.dirty and T.NEBULA_SEC or Color3.new(0,0,0)
+	end
+end
+
+local function loadTabContent(node)
+	saveActiveContent()
+	activeTab=node
+	if editorBox then
+		editorBox.Text=node.content or ""
+		refreshLineNumbers(node.content or "")
+	end
+	if statusLangLbl then
+		local names={neb="NebScript",rbxpy="RbxPython",typerbx="TypeRbx",md="Markdown",txt="PlainText"}
+		statusLangLbl.Text=names[node.lang] or node.lang
+	end
+	refreshTabBar()
+end
+
+-- ── File-tree rebuild (forward declare) ──────────────────────────────────────
+local refreshFileTree
+
+local function closeTab(node)
+	local idx,ti=findTabInfo(node)
+	if not idx then return end
+	local doClose=function()
+		ti.frame:Destroy()
+		table.remove(openTabs,idx)
+		if activeTab==node then
+			activeTab=nil
+			if #openTabs>0 then
+				loadTabContent(openTabs[math.min(idx,#openTabs)].node)
+			else
+				if editorBox then editorBox.Text="" end
+				refreshLineNumbers("")
+			end
+		end
+	end
+	if S.ui_confirmClose and node.dirty then
+		showConfirm("Close '"..node.name.."'?  Unsaved changes will be lost.", function(y)
+			if y then doClose() end
+		end)
+	else doClose() end
+end
+
+local function openTab(node)
+	if node.type~="file" then return end
+	local _,existing=findTabInfo(node)
+	if existing then loadTabContent(node); return end
+
+	local LANG_ICON={neb="✦",rbxpy="⌘",typerbx="τ",md="⬡",txt="⬢"}
+	local LANG_COL={neb=T.NEBULA_PRI,rbxpy=T.GREEN,typerbx=T.CYAN,md=T.GOLD,txt=T.TXT_DIM}
+	local icon=LANG_ICON[node.lang] or "•"
+	local lcol=LANG_COL[node.lang] or T.TXT_DIM
+
+	-- find tabBar (set during buildUI)
+	local tabBar=GUI_ROOT and GUI_ROOT:FindFirstChild("TabBar",true)
+	if not tabBar then return end
+
+	local tabFrame=mkFrame({Size=UDim2.new(0,170,1,0),BackgroundColor3=T.BG_TAB,
+		LayoutOrder=#openTabs+1,Parent=tabBar})
+	mkCorner(tabFrame,0)
+	mkStroke(tabFrame,T.BORDER,1)
+
+	-- accent stripe on active
+	local stripe=mkFrame({Size=UDim2.new(1,0,0,2),Position=UDim2.new(0,0,0,0),
+		BackgroundColor3=lcol,BackgroundTransparency=1,Parent=tabFrame})
+
+	local dot=mkText({Text="●",Size=UDim2.new(0,14,1,0),Position=UDim2.new(0,4,0,0),
+		TextColor3=Color3.new(0,0,0),TextSize=8,TextXAlignment=Enum.TextXAlignment.Center,
+		Parent=tabFrame})
+
+	local iconLbl=mkText({Text=icon,Size=UDim2.new(0,16,1,0),Position=UDim2.new(0,16,0,0),
+		TextColor3=lcol,TextSize=12,TextXAlignment=Enum.TextXAlignment.Center,Parent=tabFrame})
+
+	local label=mkText({Text=node.name,Size=UDim2.new(1,-56,1,0),Position=UDim2.new(0,34,0,0),
+		TextColor3=T.TXT_DIM,TextTruncate=Enum.TextTruncate.AtEnd,TextSize=12,Parent=tabFrame})
+
+	local closeBtn=mkBtn({Text="✕",Size=UDim2.new(0,20,0,20),
+		Position=UDim2.new(1,-22,.5,-10),
+		BackgroundColor3=T.BG_OVERLAY,TextColor3=T.TXT_MUTED,TextSize=11,
+		Font=Enum.Font.GothamBold,Parent=tabFrame})
+	mkCorner(closeBtn,4)
+
+	local ti={node=node,frame=tabFrame,label=label,dot=dot,stripe=stripe}
+	table.insert(openTabs,ti)
+
+	tabFrame.Activated:Connect(function() loadTabContent(node) end)
+	closeBtn.Activated:Connect(function() closeTab(node) end)
+	tabFrame.MouseEnter:Connect(function()
+		if activeTab~=node then tween(tabFrame,{BackgroundColor3=T.BG_OVERLAY},.1) end
+	end)
+	tabFrame.MouseLeave:Connect(function()
+		if activeTab~=node then tween(tabFrame,{BackgroundColor3=T.BG_TAB},.1) end
+	end)
+
+	loadTabContent(node)
+	tween(stripe,{BackgroundTransparency=0},.15)
+end
+
+-- ════════════════════════════════════════════════════════════════════════════
+--  FILE TREE
+-- ════════════════════════════════════════════════════════════════════════════
+local LANG_BADGE_COL={neb=T.NEBULA_PRI,rbxpy=T.GREEN,typerbx=T.CYAN,md=T.GOLD,txt=T.TXT_DIM}
+local LANG_BADGE_TXT={neb="NEB",rbxpy="PY",typerbx="TS",md="MD",txt="TXT"}
+
+refreshFileTree = function()
+	if not fileTreeCont then return end
+	for _,c in ipairs(fileTreeCont:GetChildren()) do
+		if not c:IsA("UIListLayout") then c:Destroy() end
+	end
+	if not FS.root then return end
+
+	local order=0
+	local function buildNode(node, depth)
+		order=order+1
+		local indent=depth*14
+
+		if node.type=="folder" then
+			local row=mkFrame({Size=UDim2.new(1,0,0,26),BackgroundColor3=Color3.new(0,0,0),
+				BackgroundTransparency=1,LayoutOrder=order,Parent=fileTreeCont})
+
+			local btn=mkBtn({Text="",Size=UDim2.new(1,0,1,0),BackgroundColor3=Color3.new(0,0,0),
+				BackgroundTransparency=1,Parent=row})
+
+			mkText({Text=node.expanded and "▾ 📂" or "▸ 📁",
+				Size=UDim2.new(0,60,1,0),Position=UDim2.new(0,indent+4,0,0),
+				TextColor3=T.GOLD,Font=Enum.Font.GothamBold,TextSize=12,Parent=row})
+
+			mkText({Text=node.name,Size=UDim2.new(1,-(indent+68),1,0),
+				Position=UDim2.new(0,indent+62,0,0),TextColor3=T.GOLD,
+				Font=Enum.Font.GothamBold,TextSize=12,Parent=row})
+
+			btn.MouseEnter:Connect(function()
+				row.BackgroundColor3=T.BG_OVERLAY; row.BackgroundTransparency=0
+			end)
+			btn.MouseLeave:Connect(function()
+				if dragging then
+					-- keep highlight
+				else row.BackgroundTransparency=1 end
+			end)
+			btn.MouseButton1Click:Connect(function()
+				node.expanded=not node.expanded; refreshFileTree(); saveProject()
+			end)
+			-- Drop target
+			btn.MouseButton1Up:Connect(function()
+				if dragging and dragging~=node then
+					fsMoveInto(dragging, node)
+					dragging=nil; node.expanded=true
+					refreshFileTree(); saveProject()
+					toast("Moved into '"..node.name.."'","success")
+				end
+			end)
+
+			-- Context: right-click → add file / add folder / rename / delete
+			btn.MouseButton2Click:Connect(function()
+				showDropdown("📁 "..node.name.." ›", {"New File","New Subfolder","Rename","Delete Folder"}, function(choice)
+					if choice=="New File" then
+						showDropdown("Language",{"NebScript","RbxPython","TypeRbx","Markdown","PlainText"},function(lang)
+							local langMap={NebScript="neb",RbxPython="rbxpy",TypeRbx="typerbx",Markdown="md",PlainText="txt"}
+							showInputDialog("New File Name","main.neb",function(name)
+								if name and name~="" then
+									local f=fsNode("file",name,node,{lang=langMap[lang] or "neb",content=""})
+									node.expanded=true
+									refreshFileTree(); saveProject()
+									openTab(f)
+									toast("Created '"..name.."'","success")
+								end
+							end)
+						end)
+					elseif choice=="New Subfolder" then
+						showInputDialog("Subfolder Name","subfolder",function(name)
+							if name and name~="" then
+								fsNode("folder",name,node)
+								node.expanded=true
+								refreshFileTree(); saveProject()
+							end
+						end)
+					elseif choice=="Rename" then
+						showInputDialog("Rename Folder",node.name,function(name)
+							if name and name~="" then fsRename(node,name); refreshFileTree(); saveProject() end
+						end)
+					elseif choice=="Delete Folder" then
+						showConfirm("Delete folder '"..node.name.."' and ALL its contents?",function(y)
+							if y then fsRemove(node); refreshFileTree(); saveProject() end
+						end)
+					end
+				end)
+			end)
+
+			if node.expanded then
+				for _,child in ipairs(node.children) do buildNode(child,depth+1) end
+			end
+
+		else -- file
+			local lcol=LANG_BADGE_COL[node.lang] or T.TXT_DIM
+			local ltxt=LANG_BADGE_TXT[node.lang] or "?"
+			local isActive=activeTab==node
+
+			local row=mkFrame({Size=UDim2.new(1,0,0,24),
+				BackgroundColor3=isActive and T.BG_OVERLAY or Color3.new(0,0,0),
+				BackgroundTransparency=isActive and 0 or 1,
+				LayoutOrder=order,Parent=fileTreeCont})
+
+			if isActive then mkStroke(row,T.NEBULA_PRI,1) end
+
+			local badge=mkText({Text=ltxt,Size=UDim2.new(0,26,0,14),
+				Position=UDim2.new(0,indent+4,.5,-7),
+				BackgroundColor3=lcol,BackgroundTransparency=0,
+				TextColor3=T.BG_VOID,TextXAlignment=Enum.TextXAlignment.Center,
+				Font=Enum.Font.GothamBold,TextSize=8,Parent=row})
+			mkCorner(badge,3)
+
+			local dirtyDot=mkText({Text="●",Size=UDim2.new(0,10,1,0),
+				Position=UDim2.new(1,-12,0,0),
+				TextColor3=node.dirty and T.NEBULA_SEC or Color3.new(0,0,0),
+				TextSize=8,TextXAlignment=Enum.TextXAlignment.Center,Parent=row})
+
+			mkText({Text=node.name,Size=UDim2.new(1,-(indent+36),1,0),
+				Position=UDim2.new(0,indent+32,0,0),
+				TextColor3=isActive and T.TXT_BRIGHT or T.TXT_PRIMARY,
+				Font=isActive and Enum.Font.GothamBold or Enum.Font.RobotoMono,
+				TextSize=12,Parent=row})
+
+			local btn=mkBtn({Text="",Size=UDim2.new(1,0,1,0),
+				BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,Parent=row})
+
+			btn.MouseEnter:Connect(function()
+				if not isActive then
+					row.BackgroundColor3=T.BG_ELEVATED; row.BackgroundTransparency=0
+				end
+			end)
+			btn.MouseLeave:Connect(function()
+				if not isActive then row.BackgroundTransparency=1 end
+			end)
+			btn.MouseButton1Click:Connect(function()
+				openTab(node); refreshFileTree()
+			end)
+			-- Drag start
+			btn.MouseButton1Down:Connect(function() dragging=node end)
+			btn.MouseButton1Up:Connect(function()
+				if dragging==node then dragging=nil end
+			end)
+
+			-- Right-click context
+			btn.MouseButton2Click:Connect(function()
+				showDropdown("📄 "..node.name.." ›",
+					{"Open","Change Language","Rename","Duplicate","Compile","Delete"}, function(choice)
+					if choice=="Open" then
+						openTab(node)
+					elseif choice=="Change Language" then
+						showDropdown("Select Language",{"NebScript","RbxPython","TypeRbx","Markdown","PlainText"},function(lang)
+							local m={NebScript="neb",RbxPython="rbxpy",TypeRbx="typerbx",Markdown="md",PlainText="txt"}
+							node.lang=m[lang] or "neb"; refreshFileTree(); saveProject()
+							toast("Language changed to "..lang,"info")
+						end)
+					elseif choice=="Rename" then
+						showInputDialog("Rename File",node.name,function(name)
+							if name and name~="" then fsRename(node,name); refreshFileTree(); saveProject() end
+						end)
+					elseif choice=="Duplicate" then
+						local newNode=fsNode("file",node.name.."_copy",node.parent,{lang=node.lang,content=node.content})
+						refreshFileTree(); saveProject()
+						toast("Duplicated","success")
+					elseif choice=="Compile" then
+						saveActiveContent()
+						local inst,err=compileAndOutput(node)
+						if inst then toast("Compiled → "..inst.Name,"success")
+						else toast(tostring(err),"error") end
+					elseif choice=="Delete" then
+						showConfirm("Delete '"..node.name.."'?",function(y)
+							if y then
+								local _,ti=findTabInfo(node)
+								if ti then closeTab(node) end
+								fsRemove(node); refreshFileTree(); saveProject()
+								toast("Deleted","warn")
+							end
+						end)
+					end
+				end)
+			end)
+		end
+	end
+
+	buildNode(FS.root, 0)
+
+	local cnt=#fileTreeCont:GetChildren()-1
+	fileTreeCont.Size=UDim2.new(1,0,0,math.max(cnt*26,200))
+	if sidebarScroll then
+		sidebarScroll.CanvasSize=UDim2.new(0,0,0,cnt*26+20)
+	end
+end
+
+-- ════════════════════════════════════════════════════════════════════════════
+--  SETTINGS PANEL BUILDER
+-- ════════════════════════════════════════════════════════════════════════════
+local function buildSettings()
+	if not settingsFrame then return end
+	for _,c in ipairs(settingsFrame:GetChildren()) do c:Destroy() end
+
+	local scroll=mkScroll({Size=UDim2.new(1,0,1,-50),Position=UDim2.new(0,0,0,50),
+		BackgroundColor3=T.BG_SURFACE,Parent=settingsFrame})
+
+	local cont=mkFrame({Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,
+		BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,Parent=scroll})
+	mkList(cont,Enum.FillDirection.Vertical,0)
+	mkPad(cont,8,8,14,14)
+
+	-- Section header
+	local function sec(title, icon)
+		local h=mkFrame({Size=UDim2.new(1,0,0,30),BackgroundColor3=T.BG_ELEVATED,
+			BackgroundTransparency=0,Parent=cont})
+		mkCorner(h,4)
+		mkText({Text=icon.."  "..title:upper(),Size=UDim2.new(1,-12,1,0),
+			Position=UDim2.new(0,10,0,0),TextColor3=T.NEBULA_PRI,
+			Font=Enum.Font.GothamBold,TextSize=11,Parent=h})
+		mkStroke(h,T.NEBULA_DUST,1)
+		return h
+	end
+
+	-- Row with label + widget
+	local function row(label, widget)
+		local r=mkFrame({Size=UDim2.new(1,0,0,38),BackgroundColor3=Color3.new(0,0,0),
+			BackgroundTransparency=1,Parent=cont})
+		mkText({Text=label,Size=UDim2.new(.55,0,1,0),Position=UDim2.new(0,0,0,0),
+			TextColor3=T.TXT_PRIMARY,TextSize=12,Font=Enum.Font.RobotoMono,Parent=r})
+		if widget then
+			widget.Size=UDim2.new(.42,0,0,28); widget.Position=UDim2.new(.57,0,.5,-14)
+			widget.Parent=r
+		end
+		return r
+	end
+
+	local function textInput(key, ph)
+		local b=mkBox({Text=tostring(S[key] or ""),PlaceholderText=ph or ""})
+		mkCorner(b,5); mkStroke(b,T.NEBULA_DUST,1); mkPad(b,0,0,8,8)
+		b.FocusLost:Connect(function() S[key]=b.Text; saveSettings() end)
+		return b
+	end
+	local function toggle(key)
+		local b=mkBtn({Text=S[key] and "● ON" or "○ OFF",
+			BackgroundColor3=S[key] and T.NEBULA_TER or T.BG_OVERLAY,
+			TextColor3=S[key] and T.TXT_WHITE or T.TXT_DIM,
+			Font=Enum.Font.GothamBold,TextSize=11})
+		mkCorner(b,5)
+		b.Activated:Connect(function()
+			S[key]=not S[key]; saveSettings()
+			b.Text=S[key] and "● ON" or "○ OFF"
+			tween(b,{BackgroundColor3=S[key] and T.NEBULA_TER or T.BG_OVERLAY},.15)
+			b.TextColor3=S[key] and T.TXT_WHITE or T.TXT_DIM
+		end)
+		return b
+	end
+	local function colorInput(key)
+		local c=hexToColor(S[key] or "B450FF")
+		local frame=mkFrame({BackgroundColor3=c})
+		mkCorner(frame,5); mkStroke(frame,T.NEBULA_DUST,1)
+		local b=mkBox({Text=S[key] or "B450FF",BackgroundColor3=Color3.new(0,0,0),
+			BackgroundTransparency=.4,TextColor3=T.TXT_WHITE,TextXAlignment=Enum.TextXAlignment.Center,
+			TextSize=11,Size=UDim2.new(1,0,1,0)})
+		mkCorner(b,5); b.Parent=frame
+		b.FocusLost:Connect(function()
+			local hex=b.Text:gsub("#",""):upper()
+			if #hex==6 then
+				S[key]=hex; frame.BackgroundColor3=hexToColor(hex); saveSettings()
+			end
+		end)
+		return frame
+	end
+
+	-- ── Editor ──────────────────────────────────────────────────────────────
+	sec("Editor","⚙")
+	row("Font Size",           textInput("ed_fontSize","14"))
+	row("Tab Size",            textInput("ed_tabSize","4"))
+	row("Word Wrap",           toggle("ed_wordWrap"))
+	row("Line Numbers",        toggle("ed_lineNumbers"))
+	row("Auto-Close Brackets", toggle("ed_autoCloseBrackets"))
+	row("Auto-Close Strings",  toggle("ed_autoCloseStrings"))
+	row("Highlight Active Line",toggle("ed_highlightLine"))
+	row("Smooth Scroll",       toggle("ed_smoothScroll"))
+	row("Show Whitespace",     toggle("ed_showWhitespace"))
+	row("Cursor Style",        textInput("ed_cursorStyle","line"))
+	row("Minimap",             toggle("ed_minimap"))
+	row("Breadcrumbs",         toggle("ed_breadcrumbs"))
+	row("Indent Guides",       toggle("ed_indentGuides"))
+	row("Fold Gutter",         toggle("ed_foldGutter"))
+	row("Rulers (cols,comma)", textInput("ed_rulers","80,120"))
+
+	-- ── Syntax Colors ────────────────────────────────────────────────────────
+	sec("Syntax Colors","🎨")
+	row("Keywords",    colorInput("syn_keyword"))
+	row("Strings",     colorInput("syn_string"))
+	row("Numbers",     colorInput("syn_number"))
+	row("Comments",    colorInput("syn_comment"))
+	row("Functions",   colorInput("syn_function"))
+	row("Types",       colorInput("syn_type"))
+	row("Builtins",    colorInput("syn_builtin"))
+	row("Operators",   colorInput("syn_operator"))
+	row("Parameters",  colorInput("syn_param"))
+	row("Macros",      colorInput("syn_macro"))
+	row("Special",     colorInput("syn_special"))
+	row("Labels",      colorInput("syn_label"))
+
+	-- ── Compiler ─────────────────────────────────────────────────────────────
+	sec("Compiler","🔧")
+	row("Script Type",       textInput("cmp_scriptType","Script"))
+	row("Target Service",    textInput("cmp_targetService","ServerScriptService"))
+	row("Strict Mode",       toggle("cmp_strictMode"))
+	row("Show Warnings",     toggle("cmp_warnings"))
+	row("Insert Preamble",   toggle("cmp_insertPreamble"))
+	row("Wrap in pcall",     toggle("cmp_wrapInPcall"))
+
+	-- ── Workspace ────────────────────────────────────────────────────────────
+	sec("Workspace","📁")
+	row("Project Name",      textInput("ws_projectName","MyProject"))
+	row("Root Service",      textInput("ws_rootService","ReplicatedStorage"))
+
+	-- ── Interface ────────────────────────────────────────────────────────────
+	sec("Interface","🖥")
+	row("Status Bar",        toggle("ui_showStatusBar"))
+	row("Problems Panel",    toggle("ui_showProblems"))
+	row("Animated UI",       toggle("ui_animateUI"))
+	row("Particle Background",toggle("ui_particlesBG"))
+	row("Confirm on Close",  toggle("ui_confirmClose"))
+	row("Autosave (secs)",   textInput("ui_autosave","60"))
+	row("Tooltips",          toggle("ui_tooltips"))
+
+	-- ── Keybinds ─────────────────────────────────────────────────────────────
+	sec("Keybinds (display)","⌨")
+	row("Compile",           textInput("kb_compile","F5"))
+	row("Save",              textInput("kb_save","Ctrl+S"))
+	row("New File",          textInput("kb_newFile","Ctrl+N"))
+	row("Close Tab",         textInput("kb_closeTab","Ctrl+W"))
+	row("Find",              textInput("kb_find","Ctrl+F"))
+	row("Replace",           textInput("kb_replace","Ctrl+H"))
+	row("Comment/Uncomment", textInput("kb_comment","Ctrl+/"))
+	row("Duplicate Line",    textInput("kb_duplicateLine","Ctrl+D"))
+
+	-- ── Reset ────────────────────────────────────────────────────────────────
+	local resetBtn=mkBtn({Text="↺  Reset All to Defaults",
+		Size=UDim2.new(1,0,0,38),BackgroundColor3=T.RED,TextColor3=T.TXT_WHITE,
+		Font=Enum.Font.GothamBold,TextSize=13,Parent=cont})
+	mkCorner(resetBtn,6)
+	resetBtn.Activated:Connect(function()
+		showConfirm("Reset ALL settings to defaults?",function(y)
+			if y then S=deepCopy(DEFAULTS); saveSettings(); buildSettings()
+				toast("Settings reset","info") end
+		end)
+	end)
+end
+
+-- ════════════════════════════════════════════════════════════════════════════
+--  MODULES PANEL BUILDER
+-- ════════════════════════════════════════════════════════════════════════════
+local function buildModules()
+	if not modulesFrame then return end
+	for _,c in ipairs(modulesFrame:GetChildren()) do
+		if not c:IsA("UIStroke") then c:Destroy() end
+	end
+
+	mkText({Text="📦  MODULES  ("..#listModules()..")",
+		Size=UDim2.new(1,-16,0,30),Position=UDim2.new(0,12,0,10),
+		TextColor3=T.NEBULA_PRI,Font=Enum.Font.GothamBold,TextSize=13,Parent=modulesFrame})
+
+	local scroll=mkScroll({Size=UDim2.new(1,0,1,-100),Position=UDim2.new(0,0,0,48),
+		BackgroundColor3=T.BG_SURFACE,Parent=modulesFrame})
+
+	local cont=mkFrame({Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,
+		BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,Parent=scroll})
+	mkList(cont,Enum.FillDirection.Vertical,2)
+	mkPad(cont,4,4,8,8)
+
+	for _,name in ipairs(listModules()) do
+		local isUser=USER_MODULES[name]~=nil
+		local btn=mkBtn({Text="  "..name..(isUser and "  [custom]" or ""),
+			Size=UDim2.new(1,0,0,30),BackgroundColor3=T.BG_ELEVATED,
+			TextColor3=isUser and T.NEBULA_SEC or T.TXT_PRIMARY,
+			TextXAlignment=Enum.TextXAlignment.Left,Font=Enum.Font.RobotoMono,TextSize=12,
+			Parent=cont})
+		mkCorner(btn,5)
+		btn.MouseEnter:Connect(function() tween(btn,{BackgroundColor3=T.BG_OVERLAY},.1) end)
+		btn.MouseLeave:Connect(function() tween(btn,{BackgroundColor3=T.BG_ELEVATED},.1) end)
+		btn.Activated:Connect(function()
+			-- Open module content as a read-only tab
+			local content=getModuleContent(name)
+			if content and FS.root then
+				local tmp=fsNode("file",name..".mod","__view__",{lang="neb",content=content})
+				-- temporary node not in tree
+				tmp.parent=nil; FS.index[tmp.id]=nil
+				-- just directly open a tab with a node
+				local fakeTi; local tabBar=GUI_ROOT and GUI_ROOT:FindFirstChild("TabBar",true)
+				if tabBar then
+					local _,ex=findTabInfo(tmp)
+					if not ex then openTab(tmp) end
+				end
+				toast("Viewing module: "..name,"info")
+			end
+		end)
+	end
+
+	local regBtn=mkBtn({Text="+  Register Custom Module",
+		Size=UDim2.new(1,-16,0,34),Position=UDim2.new(0,8,1,-44),
+		BackgroundColor3=T.NEBULA_TER,TextColor3=T.TXT_WHITE,
+		Font=Enum.Font.GothamBold,TextSize=13,Parent=modulesFrame})
+	mkCorner(regBtn,6)
+	regBtn.Activated:Connect(function()
+		showInputDialog("Module Name","myModule",function(name)
+			if name and name~="" then
+				registerUserModule(name)
+				buildModules()
+				toast("Registered: "..name,"success")
+			end
+		end)
+	end)
+end
+
+-- ════════════════════════════════════════════════════════════════════════════
+--  PROBLEMS PANEL
+-- ════════════════════════════════════════════════════════════════════════════
+local problems={}
+local function clearProblems()
+	problems={}
+	if problemsCont then
+		for _,c in ipairs(problemsCont:GetChildren()) do
+			if not c:IsA("UIListLayout") then c:Destroy() end
+		end
+	end
+end
+local function addProblem(msg, file, line_, severity)
+	severity=severity or "error"
+	local cols={error=T.RED,warning=T.GOLD,info=T.CYAN}
+	local icons={error="✕",warning="⚠",info="ℹ"}
+	table.insert(problems,{msg=msg,file=file,line=line_,severity=severity})
+	if not problemsCont then return end
+	local col=cols[severity] or T.RED
+	local row=mkFrame({Size=UDim2.new(1,0,0,26),BackgroundColor3=Color3.new(0,0,0),
+		BackgroundTransparency=1,Parent=problemsCont})
+	mkText({Text=icons[severity].." "..msg..(file and (" ["..file..":"..tostring(line_).."]") or ""),
+		Size=UDim2.new(1,-8,1,0),Position=UDim2.new(0,8,0,0),
+		TextColor3=col,TextSize=11,Font=Enum.Font.RobotoMono,
+		TextTruncate=Enum.TextTruncate.AtEnd,Parent=row})
+end
+
+-- ════════════════════════════════════════════════════════════════════════════
+--  MAIN UI BUILD
+-- ════════════════════════════════════════════════════════════════════════════
+local function buildUI()
+	-- Destroy existing
+	local existing=game:GetService("CoreGui"):FindFirstChild("NebScriptIDE")
+	if existing then existing:Destroy() end
+
+	local screenGui=Instance.new("ScreenGui")
+	screenGui.ResetOnSpawn=false; screenGui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+	screenGui.Name="NebScriptIDE"; screenGui.Parent=game:GetService("CoreGui")
+	GUI_ROOT=screenGui
+
+	-- ── ROOT FRAME ────────────────────────────────────────────────────────────
+	local root=mkFrame({Size=UDim2.new(1,0,1,0),BackgroundColor3=T.BG_VOID,Parent=screenGui})
+	root.Name="__Root"
+
+	-- ── PARTICLE BACKGROUND ───────────────────────────────────────────────────
+	for i=1,80 do
+		local px=math.random(); local py=math.random()
+		local size=math.random(1,3)
+		local alpha=math.random()*0.6+0.1
+		local hue=math.random(270,320)/360
+		local star=mkFrame({Size=UDim2.new(0,size,0,size),
+			Position=UDim2.new(px,0,py,0),
+			BackgroundColor3=Color3.fromHSV(hue,.8,.9),
+			BackgroundTransparency=1-alpha,ZIndex=0,Parent=root})
+		mkCorner(star,2)
+		-- Twinkle animation
+		if i%3==0 then
+			local function twinkle()
+				tween(star,{BackgroundTransparency=1-(alpha*.3)},math.random()*2+1,
+					Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
+				task.delay(math.random()*2+1,function()
+					tween(star,{BackgroundTransparency=1-alpha},math.random()*2+1,
+						Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
+					task.delay(math.random()*3+2,twinkle)
+				end)
+			end
+			task.delay(math.random()*5,twinkle)
+		end
+	end
+
+	-- ── TOOLBAR (top 46px) ────────────────────────────────────────────────────
+	local toolbar=mkFrame({Size=UDim2.new(1,0,0,46),BackgroundColor3=T.BG_SURFACE,Parent=root})
+	mkStroke(toolbar,T.BORDER,1)
+	mkGradient(toolbar,{T.BG_ELEVATED,T.BG_SURFACE},0)
+
+	-- Logo
+	local logoText=mkText({
+		Text='<font color="#B450FF"><b>✦ Neb</b></font><font color="#FF50C8"><b>Script</b></font>  <font color="#5A4190">IDE</font>',
+		RichText=true,
+		Size=UDim2.new(0,160,1,0),Position=UDim2.new(0,12,0,0),
+		Font=Enum.Font.GothamBold,TextSize=16,Parent=toolbar})
+
+	-- Toolbar buttons
+	local tbBtns={
+		{icon="＋",tip="New File (Ctrl+N)",action="new_file"},
+		{icon="📂",tip="New Folder",action="new_folder"},
+		{icon="▶",tip="Compile Active (F5)",action="compile"},
+		{icon="⬡",tip="Compile All",action="compile_all"},
+		{icon="⚙",tip="Settings",action="settings"},
+		{icon="📦",tip="Modules",action="modules"},
+		{icon="🔍",tip="Find / Replace (Ctrl+F)",action="find"},
+		{icon="✦",tip="About NebScript",action="about"},
+	}
+
+	local tbX=168
+	local function makeTbBtn(icon, action)
+		local btn=mkBtn({Text=icon,Size=UDim2.new(0,38,0,34),
+			Position=UDim2.new(0,tbX,0.5,-17),
+			BackgroundColor3=T.BG_ELEVATED,TextColor3=T.TXT_PRIMARY,
+			Font=Enum.Font.GothamBold,TextSize=16,Parent=toolbar})
+		mkCorner(btn,6)
+		tbX=tbX+42
+		btn.MouseEnter:Connect(function()
+			tween(btn,{BackgroundColor3=T.BG_OVERLAY},.1)
+			btn.TextColor3=T.NEBULA_PRI
+		end)
+		btn.MouseLeave:Connect(function()
+			tween(btn,{BackgroundColor3=T.BG_ELEVATED},.1)
+			btn.TextColor3=T.TXT_PRIMARY
+		end)
+		return btn
+	end
+
+	local btnHandles={}
+	for _,info in ipairs(tbBtns) do
+		btnHandles[info.action]=makeTbBtn(info.icon, info.action)
+	end
+
+	-- Version label
+	mkText({Text="v1.0.0",Size=UDim2.new(0,60,1,0),Position=UDim2.new(1,-70,0,0),
+		TextColor3=T.TXT_MUTED,TextSize=11,TextXAlignment=Enum.TextXAlignment.Right,Parent=toolbar})
+
+	-- ── BODY (below toolbar) ──────────────────────────────────────────────────
+	local body=mkFrame({Size=UDim2.new(1,0,1,-46),Position=UDim2.new(0,0,0,46),
+		BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,Parent=root})
+
+	-- ── SIDEBAR ───────────────────────────────────────────────────────────────
+	local SIDEBAR_W=tonumber(S.ui_sidebarWidth) or 220
+	local sidebar=mkFrame({Size=UDim2.new(0,SIDEBAR_W,1,0),BackgroundColor3=T.BG_SIDEBAR,Parent=body})
+	mkStroke(sidebar,T.BORDER,1)
+
+	-- Sidebar header
+	local sbHeader=mkFrame({Size=UDim2.new(1,0,0,34),BackgroundColor3=T.BG_ELEVATED,Parent=sidebar})
+	mkGradient(sbHeader,{T.BG_ELEVATED,T.BG_SIDEBAR},90)
+	mkText({Text="  EXPLORER",Size=UDim2.new(1,-70,1,0),TextColor3=T.NEBULA_PRI,
+		Font=Enum.Font.GothamBold,TextSize=11,Parent=sbHeader})
+
+	-- Sidebar action buttons
+	local function sbBtn(icon, x, tip)
+		local b=mkBtn({Text=icon,Size=UDim2.new(0,26,0,26),Position=UDim2.new(1,-(x),0.5,-13),
+			BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,
+			TextColor3=T.TXT_DIM,TextSize=14,Font=Enum.Font.GothamBold,Parent=sbHeader})
+		b.MouseEnter:Connect(function() b.TextColor3=T.NEBULA_PRI end)
+		b.MouseLeave:Connect(function() b.TextColor3=T.TXT_DIM end)
+		return b
+	end
+	local newFileBtn=sbBtn("＋",60,"New File")
+	local newFolderBtn=sbBtn("📁",30,"New Folder")
+
+	-- Project name label
+	local projLabel=mkText({Text="  "..S.ws_projectName,
+		Size=UDim2.new(1,0,0,22),Position=UDim2.new(0,0,0,34),
+		TextColor3=T.TXT_MUTED,TextSize=10,Font=Enum.Font.Gotham,Parent=sidebar})
+
+	-- File tree scroll
+	sidebarScroll=mkScroll({Size=UDim2.new(1,0,1,-56),Position=UDim2.new(0,0,0,56),
+		BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,Parent=sidebar})
+
+	fileTreeCont=mkFrame({Size=UDim2.new(1,0,0,200),BackgroundColor3=Color3.new(0,0,0),
+		BackgroundTransparency=1,Parent=sidebarScroll})
+	mkList(fileTreeCont)
+
+	-- ── TAB BAR ───────────────────────────────────────────────────────────────
+	local mainArea=mkFrame({Size=UDim2.new(1,-SIDEBAR_W,1,0),Position=UDim2.new(0,SIDEBAR_W,0,0),
+		BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,Parent=body})
+
+	local tabBar=mkScroll({Name="TabBar",Size=UDim2.new(1,0,0,36),
+		BackgroundColor3=T.BG_SURFACE,
+		ScrollBarThickness=3,AutomaticCanvasSize=Enum.AutomaticSize.X,
+		CanvasSize=UDim2.new(0,0,0,0),Parent=mainArea})
+	mkStroke(tabBar,T.BORDER,1)
+	local tabList=mkList(tabBar,Enum.FillDirection.Horizontal,0)
+	tabBar.Name="TabBar"
+
+	-- ── SEARCH BAR (hidden by default) ───────────────────────────────────────
+	searchBar=mkFrame({Size=UDim2.new(1,0,0,36),Position=UDim2.new(0,0,0,36),
+		BackgroundColor3=T.BG_ELEVATED,Visible=false,Parent=mainArea})
+	mkStroke(searchBar,T.NEBULA_DUST,1)
+	mkPad(searchBar,4,4,8,8)
+
+	local findBox=mkBox({PlaceholderText="Find…",Size=UDim2.new(.42,0,1,-8),
+		Position=UDim2.new(0,0,.5,-0),BackgroundColor3=T.BG_INPUT,Parent=searchBar})
+	mkCorner(findBox,5); mkStroke(findBox,T.NEBULA_DUST,1); mkPad(findBox,0,0,6,6)
+
+	local replBox=mkBox({PlaceholderText="Replace…",Size=UDim2.new(.42,0,1,-8),
+		Position=UDim2.new(.44,0,.5,-0),BackgroundColor3=T.BG_INPUT,Parent=searchBar})
+	mkCorner(replBox,5); mkStroke(replBox,T.NEBULA_DUST,1); mkPad(replBox,0,0,6,6)
+
+	local replBtn=mkBtn({Text="Replace All",Size=UDim2.new(.12,0,1,-8),
+		Position=UDim2.new(.87,0,.5,-0),BackgroundColor3=T.NEBULA_TER,
+		TextColor3=T.TXT_WHITE,Font=Enum.Font.GothamBold,TextSize=11,Parent=searchBar})
+	mkCorner(replBtn,5)
+
+	local closeSearchBtn=mkBtn({Text="✕",Size=UDim2.new(0,26,1,-8),
+		Position=UDim2.new(1,-28,.5,-0),
+		BackgroundColor3=T.BG_OVERLAY,TextColor3=T.TXT_DIM,Parent=searchBar})
+	mkCorner(closeSearchBtn,5)
+	closeSearchBtn.Activated:Connect(function() searchBar.Visible=false end)
+	replBtn.Activated:Connect(function()
+		local find=findBox.Text; local repl=replBox.Text
+		if find~="" and activeTab then
+			saveActiveContent()
+			activeTab.content=activeTab.content:gsub(find:gsub("[%(%)%.%%%+%-%*%?%[%]%^%$]","%%%1"),repl)
+			editorBox.Text=activeTab.content
+			toast("Replaced all occurrences of '"..find.."'","success")
+		end
+	end)
+
+	-- ── EDITOR AREA ───────────────────────────────────────────────────────────
+	local PROBLEMS_H=120
+	local editorArea=mkFrame({Size=UDim2.new(1,0,1,-36-PROBLEMS_H-(S.ui_showStatusBar and 28 or 0)),
+		Position=UDim2.new(0,0,0,72),BackgroundColor3=T.BG_EDITOR,Parent=mainArea})
+
+	-- Line numbers pane
+	local lineNumPane=mkFrame({Size=UDim2.new(0,44,1,0),BackgroundColor3=T.BG_VOID,Parent=editorArea})
+	mkStroke(lineNumPane,T.BORDER,1)
+	lineNumScroll=mkFrame({Size=UDim2.new(1,0,1,0),BackgroundColor3=Color3.new(0,0,0),
+		BackgroundTransparency=1,ClipsDescendants=true,Parent=lineNumPane})
+	mkList(lineNumScroll); mkPad(lineNumScroll,4,4,2,4)
+
+	-- Editor TextBox
+	editorScroll=mkScroll({Size=UDim2.new(1,-44,1,0),Position=UDim2.new(0,44,0,0),
+		BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,
+		ScrollBarThickness=6,ScrollBarImageColor3=T.NEBULA_DUST,
+		CanvasSize=UDim2.new(0,0,0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,
+		Parent=editorArea})
+
+	editorBox=mkBox({Text="",PlaceholderText="-- Start coding in NebScript, RbxPython, or TypeRbx…",
+		Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,
+		Position=UDim2.new(0,0,0,0),BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,
+		TextColor3=T.TXT_PRIMARY,TextXAlignment=Enum.TextXAlignment.Left,
+		TextYAlignment=Enum.TextYAlignment.Top,Font=Enum.Font.RobotoMono,
+		TextSize=tonumber(S.ed_fontSize) or 14,ClearTextOnFocus=false,
+		MultiLine=true,TextWrapped=S.ed_wordWrap,
+		PlaceholderColor3=T.TXT_MUTED,Parent=editorScroll})
+	mkPad(editorBox,6,6,10,10)
+
+	-- Update line numbers as user types
+	editorBox:GetPropertyChangedSignal("Text"):Connect(function()
+		refreshLineNumbers(editorBox.Text)
+		if activeTab then
+			activeTab.content=editorBox.Text
+			activeTab.dirty=true
+		end
+	end)
+
+	-- ── PROBLEMS PANEL ────────────────────────────────────────────────────────
+	local probPanel=mkFrame({Size=UDim2.new(1,0,0,PROBLEMS_H),
+		Position=UDim2.new(0,0,1,-PROBLEMS_H-(S.ui_showStatusBar and 28 or 0)),
+		BackgroundColor3=T.BG_SURFACE,Parent=mainArea})
+	mkStroke(probPanel,T.BORDER,1)
+
+	mkText({Text="  ⚠  PROBLEMS",Size=UDim2.new(1,0,0,24),
+		TextColor3=T.GOLD,Font=Enum.Font.GothamBold,TextSize=11,
+		BackgroundColor3=T.BG_ELEVATED,BackgroundTransparency=0,Parent=probPanel})
+
+	local probScroll=mkScroll({Size=UDim2.new(1,0,1,-24),Position=UDim2.new(0,0,0,24),
+		BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,Parent=probPanel})
+	problemsCont=mkFrame({Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,
+		BackgroundColor3=Color3.new(0,0,0),BackgroundTransparency=1,Parent=probScroll})
+	mkList(problemsCont)
+
+	-- ── STATUS BAR ────────────────────────────────────────────────────────────
+	local statusBar
+	if S.ui_showStatusBar then
+		statusBar=mkFrame({Size=UDim2.new(1,0,0,28),Position=UDim2.new(0,0,1,-28),
+			BackgroundColor3=T.NEBULA_TER,Parent=mainArea})
+		mkGradient(statusBar,{T.NEBULA_TER,T.BG_ELEVATED},0)
+
+		statusLangLbl=mkText({Text="NebScript",Size=UDim2.new(0,100,1,0),
+			Position=UDim2.new(0,8,0,0),TextColor3=T.TXT_WHITE,
+			Font=Enum.Font.GothamBold,TextSize=11,Parent=statusBar})
+
+		statusLineLbl=mkText({Text="Ln 1, Col 1",Size=UDim2.new(0,120,1,0),
+			Position=UDim2.new(0,110,0,0),TextColor3=T.TXT_DIM,
+			TextSize=11,Parent=statusBar})
+
+		mkText({Text="NebScript IDE  •  v1.0.0  •  Nebula Theme",
+			Size=UDim2.new(.5,0,1,0),Position=UDim2.new(.25,0,0,0),
+			TextColor3=T.TXT_DIM,TextXAlignment=Enum.TextXAlignment.Center,
+			TextSize=11,Parent=statusBar})
+
+		statusMsgLbl=mkText({Text="Ready",Size=UDim2.new(0,200,1,0),
+			Position=UDim2.new(1,-208,0,0),TextColor3=T.TXT_DIM,
+			TextXAlignment=Enum.TextXAlignment.Right,TextSize=11,Parent=statusBar})
+	end
+
+	-- ── SETTINGS FRAME (overlay panel) ───────────────────────────────────────
+	settingsFrame=mkFrame({Size=UDim2.new(0,500,1,0),Position=UDim2.new(1,0,0,0),
+		BackgroundColor3=T.BG_SURFACE,ZIndex=50,Parent=mainArea})
+	mkStroke(settingsFrame,T.NEBULA_PRI,1.5)
+
+	mkText({Text="  ⚙  SETTINGS",Size=UDim2.new(1,0,0,40),
+		BackgroundColor3=T.BG_ELEVATED,BackgroundTransparency=0,
+		TextColor3=T.NEBULA_PRI,Font=Enum.Font.GothamBold,TextSize=14,ZIndex=51,Parent=settingsFrame})
+	local closeSettings=mkBtn({Text="✕",Size=UDim2.new(0,28,0,28),
+		Position=UDim2.new(1,-34,0,6),BackgroundColor3=T.BG_OVERLAY,
+		TextColor3=T.TXT_DIM,ZIndex=52,Parent=settingsFrame})
+	mkCorner(closeSettings,6)
+	closeSettings.Activated:Connect(function()
+		tween(settingsFrame,{Position=UDim2.new(1,0,0,0)},.25,Enum.EasingStyle.Back,Enum.EasingDirection.In)
+	end)
+	buildSettings()
+
+	-- ── MODULES FRAME (overlay panel) ────────────────────────────────────────
+	modulesFrame=mkFrame({Size=UDim2.new(0,400,1,0),Position=UDim2.new(1,0,0,0),
+		BackgroundColor3=T.BG_SURFACE,ZIndex=50,Parent=mainArea})
+	mkStroke(modulesFrame,T.NEBULA_SEC,1.5)
+	local closeMods=mkBtn({Text="✕",Size=UDim2.new(0,28,0,28),
+		Position=UDim2.new(1,-34,0,6),BackgroundColor3=T.BG_OVERLAY,
+		TextColor3=T.TXT_DIM,ZIndex=52,Parent=modulesFrame})
+	mkCorner(closeMods,6)
+	closeMods.Activated:Connect(function()
+		tween(modulesFrame,{Position=UDim2.new(1,0,0,0)},.25,Enum.EasingStyle.Back,Enum.EasingDirection.In)
+	end)
+	buildModules()
+
+	-- ── TOOLBAR ACTIONS ───────────────────────────────────────────────────────
+	local function newFile()
+		if not FS.root then toast("No project open","warn"); return end
+		showDropdown("Language",{"NebScript","RbxPython","TypeRbx","Markdown","PlainText"},function(lang)
+			local m={NebScript="neb",RbxPython="rbxpy",TypeRbx="typerbx",Markdown="md",PlainText="txt"}
+			showInputDialog("File Name","main.neb",function(name)
+				if name and name~="" then
+					local node=fsNode("file",name,FS.root,{lang=m[lang] or "neb",content=""})
+					refreshFileTree(); saveProject(); openTab(node)
+					toast("Created '"..name.."'","success")
+				end
+			end)
+		end)
+	end
+
+	local function newFolder()
+		if not FS.root then toast("No project open","warn"); return end
+		showInputDialog("Folder Name","myfolder",function(name)
+			if name and name~="" then
+				fsNode("folder",name,FS.root); FS.root.expanded=true
+				refreshFileTree(); saveProject()
+				toast("Created folder '"..name.."'","success")
+			end
+		end)
+	end
+
+	local function compileActive()
+		saveActiveContent()
+		if not activeTab then toast("No file open","warn"); return end
+		clearProblems()
+		local inst,err=compileAndOutput(activeTab)
+		if inst then
+			setStatus("Compiled → "..inst:GetFullName(),"success")
+			toast("Compiled: "..activeTab.name,"success")
+			activeTab.dirty=false; refreshFileTree(); refreshTabBar()
+		else
+			setStatus("Compile error","error")
+			addProblem(tostring(err), activeTab.name, nil, "error")
+			toast("Compile failed","error")
+		end
+	end
+
+	local function compileAll()
+		if not FS.root then toast("No project","warn"); return end
+		saveActiveContent()
+		clearProblems()
+		local count=0; local errors=0
+		local function recurse(node)
+			if node.type=="file" and node.lang~="md" and node.lang~="txt" then
+				local _,err=compileAndOutput(node)
+				if err then errors=errors+1; addProblem(tostring(err),node.name,nil,"error")
+				else count=count+1; node.dirty=false end
+			elseif node.type=="folder" then
+				for _,child in ipairs(node.children) do recurse(child) end
+			end
+		end
+		recurse(FS.root)
+		refreshTabBar()
+		if errors>0 then
+			toast("Compiled "..count.." / errors: "..errors,"warn")
+		else
+			toast("All "..count.." files compiled ✓","success")
+		end
+	end
+
+	btnHandles["new_file"].Activated:Connect(newFile)
+	btnHandles["new_folder"].Activated:Connect(newFolder)
+	btnHandles["compile"].Activated:Connect(compileActive)
+	btnHandles["compile_all"].Activated:Connect(compileAll)
+	newFileBtn.Activated:Connect(newFile)
+	newFolderBtn.Activated:Connect(newFolder)
+
+	btnHandles["settings"].Activated:Connect(function()
+		local shown=settingsFrame.Position.X.Scale>=.9
+		if shown then
+			tween(settingsFrame,{Position=UDim2.new(1,-500,0,0)},.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out)
+		else
+			tween(settingsFrame,{Position=UDim2.new(1,0,0,0)},.25,Enum.EasingStyle.Back,Enum.EasingDirection.In)
+		end
+	end)
+
+	btnHandles["modules"].Activated:Connect(function()
+		local shown=modulesFrame.Position.X.Scale>=.9
+		if shown then
+			buildModules()
+			tween(modulesFrame,{Position=UDim2.new(1,-400,0,0)},.25,Enum.EasingStyle.Back,Enum.EasingDirection.Out)
+		else
+			tween(modulesFrame,{Position=UDim2.new(1,0,0,0)},.25,Enum.EasingStyle.Back,Enum.EasingDirection.In)
+		end
+	end)
+
+	btnHandles["find"].Activated:Connect(function()
+		searchBar.Visible=not searchBar.Visible
+		if searchBar.Visible then findBox:CaptureFocus() end
+	end)
+
+	btnHandles["about"].Activated:Connect(function()
+		showConfirm(
+			"NebScript IDE  v1.0.0\n\nThree name candidates:\n  1. NebScript\n  2. VoidScript\n  3. LunaLang\n\nNebula Theme · Rust/Swift syntax vibe\nLanguages: NebScript · RbxPython · TypeRbx",
+			function() end)
+	end)
+
+	-- Keyboard shortcuts
+	UIS.InputBegan:Connect(function(inp, gp)
+		if gp then return end
+		local ctrl=UIS:IsKeyDown(Enum.KeyCode.LeftControl) or UIS:IsKeyDown(Enum.KeyCode.RightControl)
+		if inp.KeyCode==Enum.KeyCode.F5 then compileActive()
+		elseif ctrl and inp.KeyCode==Enum.KeyCode.S then
+			saveActiveContent(); saveProject(); toast("Saved","success")
+		elseif ctrl and inp.KeyCode==Enum.KeyCode.N then newFile()
+		elseif ctrl and inp.KeyCode==Enum.KeyCode.W then
+			if activeTab then closeTab(activeTab) end
+		elseif ctrl and inp.KeyCode==Enum.KeyCode.F then
+			searchBar.Visible=not searchBar.Visible
+			if searchBar.Visible then findBox:CaptureFocus() end
+		elseif ctrl and inp.KeyCode==Enum.KeyCode.Return then
+			compileActive()
+		end
+	end)
+
+	-- ── AUTOSAVE ──────────────────────────────────────────────────────────────
+	local autosaveInterval=tonumber(S.ui_autosave) or 0
+	if autosaveInterval>0 then
+		task.spawn(function()
+			while GUI_ROOT and GUI_ROOT.Parent do
+				task.wait(autosaveInterval)
+				saveActiveContent(); saveProject()
+				setStatus("Autosaved","success")
+			end
+		end)
+	end
+
+	-- ── INITIALISE PROJECT ────────────────────────────────────────────────────
+	local loaded=loadProject()
+	if not loaded then
+		-- First run: ask for project name + service
+		showDropdown("Root Service",{"ReplicatedStorage","ServerStorage","ServerScriptService","Workspace"},function(svc)
+			S.ws_rootService=svc or "ReplicatedStorage"
+			showInputDialog("Project Name","MyProject",function(name)
+				S.ws_projectName=name or "MyProject"
+				saveSettings()
+				FS.root=fsNode("folder",S.ws_projectName,nil)
+				FS.root.expanded=true
+				-- Create starter file
+				local starter=fsNode("file","main.neb",FS.root,{lang="neb",content=[[
+// Welcome to NebScript!
+// Language: NebScript (Rust/Swift modern vibe)
+// Compiles to Roblox Lua
+
+@roblox
+fn main() {
+    let message = "Hello from $NebScript!"
+    print(message)
+
+    // Range loop
+    for i in range(1, 10) {
+        let squared = i ** 2
+        print(fmt("  %d² = %d", i, squared))
+    }
+
+    // Pipeline example
+    let result = [1,2,3,4,5]
+        |> filter(fn(x) -> x % 2 == 0)
+        |> map(fn(x) -> x * 10)
+    print(result)
+
+    // Pattern matching
+    let score = 85
+    match score {
+        case 90: print("A grade")
+        case 80: print("B grade")
+        case 70: print("C grade")
+        default: print("Keep trying!")
+    }
+}
+
+main()
+]]})
+				refreshFileTree(); saveProject()
+				openTab(starter)
+				projLabel.Text="  "..S.ws_projectName
+				toast("Project '"..S.ws_projectName.."' created!","success")
+			end)
+		end)
+	else
+		refreshFileTree()
+		projLabel.Text="  "..S.ws_projectName
+		-- Open first file if any
+		if FS.root then
+			local function findFirst(node)
+				if node.type=="file" then return node end
+				for _,c in ipairs(node.children or {}) do
+					local f=findFirst(c); if f then return f end
+				end
+			end
+			local first=findFirst(FS.root)
+			if first then openTab(first) end
+		end
+		toast("Loaded project: "..S.ws_projectName,"success")
+	end
+end
+
+-- ════════════════════════════════════════════════════════════════════════════
+--  PLUGIN BUTTON & LIFECYCLE
+-- ════════════════════════════════════════════════════════════════════════════
+local pluginToolbar = plugin:CreateToolbar("NebScript IDE")
+local pluginButton  = pluginToolbar:CreateButton(
+	"NebScript IDE",
+	"Open NebScript IDE — multi-language transpiler for Roblox",
+	""   -- icon asset id (blank = default)
+)
+
+local guiOpen = false
+
+pluginButton.Click:Connect(function()
+	guiOpen = not guiOpen
+	if guiOpen then
+		buildUI()
+		pluginButton:SetActive(true)
+	else
+		local existing=game:GetService("CoreGui"):FindFirstChild("NebScriptIDE")
+		if existing then
+			saveActiveContent(); saveProject()
+			existing:Destroy()
+		end
+		GUI_ROOT=nil
+		pluginButton:SetActive(false)
+	end
+end)
+
+plugin.Unloading:Connect(function()
+	saveActiveContent(); saveProject(); saveSettings()
+	local existing=game:GetService("CoreGui"):FindFirstChild("NebScriptIDE")
+	if existing then existing:Destroy() end
+end)
