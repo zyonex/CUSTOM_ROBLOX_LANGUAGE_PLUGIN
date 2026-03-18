@@ -276,11 +276,11 @@ end
 local function fsDeserialise(data, parent)
 	if data.t=="f" then
 		local n={type="file",name=data.n,lang=data.l or "neb",content=data.c or "",
-			parent=parent,id=data.id or genId(),dirty=false}
+		         parent=parent,id=data.id or genId(),dirty=false}
 		FS.index[n.id]=n; return n
 	else
 		local n={type="folder",name=data.n,parent=parent,
-			children={},id=data.id or genId(),expanded=data.e or false}
+		         children={},id=data.id or genId(),expanded=data.e or false}
 		FS.index[n.id]=n
 		for _,cd in ipairs(data.ch or {}) do
 			table.insert(n.children, fsDeserialise(cd,n))
@@ -475,31 +475,31 @@ local function tokenise(src, lang)
 	local kwSet, blSet
 	if lang=="rbxpy" then
 		kwSet = {["if"]=true,["elif"]=true,["else"]=true,["for"]=true,["while"]=true,["def"]=true,["class"]=true,
-			["return"]=true,["import"]=true,["from"]=true,["as"]=true,["try"]=true,["except"]=true,["finally"]=true,
-			["with"]=true,["pass"]=true,["break"]=true,["continue"]=true,["and"]=true,["or"]=true,["not"]=true,
-			["in"]=true,["is"]=true,["None"]=true,["True"]=true,["False"]=true,["lambda"]=true,["yield"]=true,
-			["global"]=true,["nonlocal"]=true,["raise"]=true,["del"]=true,["assert"]=true,["async"]=true,["await"]=true,
-			["match"]=true,["case"]=true}
+		         ["return"]=true,["import"]=true,["from"]=true,["as"]=true,["try"]=true,["except"]=true,["finally"]=true,
+		         ["with"]=true,["pass"]=true,["break"]=true,["continue"]=true,["and"]=true,["or"]=true,["not"]=true,
+		         ["in"]=true,["is"]=true,["None"]=true,["True"]=true,["False"]=true,["lambda"]=true,["yield"]=true,
+		         ["global"]=true,["nonlocal"]=true,["raise"]=true,["del"]=true,["assert"]=true,["async"]=true,["await"]=true,
+		         ["match"]=true,["case"]=true}
 		blSet = {["print"]=true,["len"]=true,["range"]=true,["type"]=true,["str"]=true,["int"]=true,["float"]=true,
-			["bool"]=true,["list"]=true,["dict"]=true,["tuple"]=true,["set"]=true,["zip"]=true,["enumerate"]=true,
-			["map"]=true,["filter"]=true,["sorted"]=true,["reversed"]=true,["sum"]=true,["min"]=true,["max"]=true,
-			["abs"]=true,["round"]=true,["isinstance"]=true,["hasattr"]=true,["getattr"]=true,["setattr"]=true,
-			["super"]=true,["property"]=true,["staticmethod"]=true,["classmethod"]=true}
+		         ["bool"]=true,["list"]=true,["dict"]=true,["tuple"]=true,["set"]=true,["zip"]=true,["enumerate"]=true,
+		         ["map"]=true,["filter"]=true,["sorted"]=true,["reversed"]=true,["sum"]=true,["min"]=true,["max"]=true,
+		         ["abs"]=true,["round"]=true,["isinstance"]=true,["hasattr"]=true,["getattr"]=true,["setattr"]=true,
+		         ["super"]=true,["property"]=true,["staticmethod"]=true,["classmethod"]=true}
 	elseif lang=="typerbx" then
 		kwSet = {["const"]=true,["let"]=true,["var"]=true,["function"]=true,["class"]=true,["interface"]=true,
-			["type"]=true,["enum"]=true,["if"]=true,["else"]=true,["for"]=true,["while"]=true,["do"]=true,
-			["return"]=true,["import"]=true,["export"]=true,["from"]=true,["as"]=true,["extends"]=true,
-			["implements"]=true,["new"]=true,["this"]=true,["super"]=true,["typeof"]=true,["instanceof"]=true,
-			["in"]=true,["of"]=true,["break"]=true,["continue"]=true,["try"]=true,["catch"]=true,["finally"]=true,
-			["throw"]=true,["async"]=true,["await"]=true,["public"]=true,["private"]=true,["protected"]=true,
-			["readonly"]=true,["static"]=true,["abstract"]=true,["override"]=true,["null"]=true,
-			["undefined"]=true,["true"]=true,["false"]=true,["void"]=true,["never"]=true,["any"]=true,
-			["string"]=true,["number"]=true,["boolean"]=true,["keyof"]=true,["infer"]=true,["namespace"]=true,
-			["declare"]=true,["module"]=true,["satisfies"]=true}
+		         ["type"]=true,["enum"]=true,["if"]=true,["else"]=true,["for"]=true,["while"]=true,["do"]=true,
+		         ["return"]=true,["import"]=true,["export"]=true,["from"]=true,["as"]=true,["extends"]=true,
+		         ["implements"]=true,["new"]=true,["this"]=true,["super"]=true,["typeof"]=true,["instanceof"]=true,
+		         ["in"]=true,["of"]=true,["break"]=true,["continue"]=true,["try"]=true,["catch"]=true,["finally"]=true,
+		         ["throw"]=true,["async"]=true,["await"]=true,["public"]=true,["private"]=true,["protected"]=true,
+		         ["readonly"]=true,["static"]=true,["abstract"]=true,["override"]=true,["null"]=true,
+		         ["undefined"]=true,["true"]=true,["false"]=true,["void"]=true,["never"]=true,["any"]=true,
+		         ["string"]=true,["number"]=true,["boolean"]=true,["keyof"]=true,["infer"]=true,["namespace"]=true,
+		         ["declare"]=true,["module"]=true,["satisfies"]=true}
 		blSet = {["console"]=true,["Math"]=true,["Object"]=true,["Array"]=true,["String"]=true,["Number"]=true,
-			["Boolean"]=true,["Promise"]=true,["JSON"]=true,["Map"]=true,["Set"]=true,["Date"]=true,
-			["setTimeout"]=true,["setInterval"]=true,["clearTimeout"]=true,["fetch"]=true,
-			["require"]=true,["module"]=true,["exports"]=true,["Symbol"]=true,["Reflect"]=true,["Proxy"]=true}
+		         ["Boolean"]=true,["Promise"]=true,["JSON"]=true,["Map"]=true,["Set"]=true,["Date"]=true,
+		         ["setTimeout"]=true,["setInterval"]=true,["clearTimeout"]=true,["fetch"]=true,
+		         ["require"]=true,["module"]=true,["exports"]=true,["Symbol"]=true,["Reflect"]=true,["Proxy"]=true}
 	else -- neb
 		kwSet=NEB_KEYWORDS
 		blSet=NEB_BUILTINS
@@ -516,10 +516,10 @@ local function tokenise(src, lang)
 		if ch=="\n" then
 			addTok(TT.NEWLINE,"\n"); line=line+1; adv()
 
-			-- whitespace
+		-- whitespace
 		elseif ch==" " or ch=="\t" or ch=="\r" then adv()
 
-			-- Lua block comment --[[
+		-- Lua block comment --[[
 		elseif ch=="-" and s(1,3)=="--[" and (s(3,3)=="[" or s(3,3)=="=") then
 			local start=i; local level=0
 			local j=i+2
@@ -539,13 +539,13 @@ local function tokenise(src, lang)
 				addTok(TT.COMMENT,src:sub(start,i-1))
 			end
 
-			-- line comment -- or //
+		-- line comment -- or //
 		elseif (ch=="-" and s(1,1)=="-") or (ch=="/" and s(1,1)=="/") then
 			local start=i; adv(2)
 			while i<=n and c()~="\n" do adv() end
 			addTok(TT.COMMENT,src:sub(start,i-1))
 
-			-- block comment /* */
+		-- block comment /* */
 		elseif ch=="/" and s(1,1)=="*" then
 			local start=i; adv(2)
 			while i<=n do
@@ -554,7 +554,7 @@ local function tokenise(src, lang)
 			end
 			addTok(TT.COMMENT,src:sub(start,i-1))
 
-			-- Lua long string [[ or [==[
+		-- Lua long string [[ or [==[
 		elseif ch=="[" and (s(1,1)=="[" or s(1,1)=="=") then
 			local level=0; local j=i+1
 			while j<=n and src:sub(j,j)=="=" do level=level+1; j=j+1 end
@@ -569,7 +569,7 @@ local function tokenise(src, lang)
 				else addTok(TT.STRING,src:sub(i)); i=n+1 end
 			else addTok(TT.PUNCT,"["); adv() end
 
-			-- strings
+		-- strings
 		elseif ch=='"' or ch=="'" or ch=="`" then
 			local q=ch; local start=i; adv()
 			local val=q
@@ -582,7 +582,7 @@ local function tokenise(src, lang)
 			end
 			addTok(TT.STRING,val)
 
-			-- numbers  (0x hex, 0b bin, 0o oct, decimal with _ separators)
+		-- numbers  (0x hex, 0b bin, 0o oct, decimal with _ separators)
 		elseif ch:match("%d") or (ch=="." and s(1,1):match("%d")) then
 			local start=i
 			if ch=="0" and (s(1,1)=="x" or s(1,1)=="X") then
@@ -593,7 +593,7 @@ local function tokenise(src, lang)
 				adv(2); while i<=n and c():match("[0-7_]") do adv() end
 			else
 				while i<=n and (c():match("[%d_]") or
-					(c()=="." and s(1,1):match("%d") and not src:sub(i-1,i-1):match("%d%.%d"))) do adv() end
+				      (c()=="." and s(1,1):match("%d") and not src:sub(i-1,i-1):match("%d%.%d"))) do adv() end
 				if c()=="e" or c()=="E" then
 					adv()
 					if c()=="+" or c()=="-" then adv() end
@@ -606,13 +606,13 @@ local function tokenise(src, lang)
 			end
 			addTok(TT.NUMBER,src:sub(start,i-1))
 
-			-- macro @
+		-- macro @
 		elseif ch=="@" then
 			local start=i; adv()
 			while i<=n and c():match("[%w_]") do adv() end
 			addTok(TT.MACRO,src:sub(start,i-1))
 
-			-- identifier / keyword / builtin
+		-- identifier / keyword / builtin
 		elseif ch:match("[%a_]") then
 			local start=i
 			while i<=n and c():match("[%w_]") do adv() end
@@ -622,7 +622,7 @@ local function tokenise(src, lang)
 			elseif lang=="neb" and isNebBuiltinVar(w) then addTok(TT.BUILTIN_VAR,w)
 			else addTok(TT.IDENT,w) end
 
-			-- operators (try longest match first, up to 4 chars)
+		-- operators (try longest match first, up to 4 chars)
 		elseif ch:match("[%+%-%*/%%<>=!&|%.%?:^~#$]") then
 			local best=""
 			for len=4,1,-1 do
@@ -635,7 +635,7 @@ local function tokenise(src, lang)
 			if best~="" then addTok(TT.OPERATOR,best); adv(#best)
 			else addTok(TT.OPERATOR,ch); adv() end
 
-			-- punctuation
+		-- punctuation
 		elseif ch:match("[%(%)%[%]{}%;,]") then
 			addTok(TT.PUNCT,ch); adv()
 
@@ -719,8 +719,8 @@ end
 -- ════════════════════════════════════════════════════════════════════════════
 --  NEBSCRIPT COMPILER  (NebScript → Roblox Lua)
 -- ════════════════════════════════════════════════════════════════════════════
-local NEB_PREAMBLE = [[
---[[ NebScript Runtime — auto-inserted by compiler ]]
+local NEB_PREAMBLE = [=[
+-- NebScript Runtime — auto-inserted by compiler
 local __neb={};local __neb_mt={__index=__neb}
 __neb.pipe=function(v,...)local r=v;for _,f in ipairs({...})do r=f(r)end;return r end
 __neb.compose=function(...)local fs={...};return function(x)local r=x;for i=#fs,1,-1 do r=fs[i](r)end;return r end end
@@ -741,146 +741,229 @@ __neb.id=function(x)return x end;__neb.noop=function()end
 local PI,TAU,E,PHI=math.pi,math.pi*2,math.exp(1),(1+math.sqrt(5))/2
 local INF,EPSILON=math.huge,1e-10
 local ZERO,ONE=Vector3.zero,Vector3.one
-local UP,DOWN,LEFT,RIGHT,FORWARD,BACK=Vector3.new(0,1,0),Vector3.new(0,-1,0),Vector3.new(-1,0,0),Vector3.new(1,0,0),Vector3.new(0,0,-1),Vector3.new(0,0,1)
+local UP,DOWN,LEFT,RIGHT,FORWARD,BACK=Vector3.new(0,1,0),Vector3.new(0,-1,0),
+  Vector3.new(-1,0,0),Vector3.new(1,0,0),Vector3.new(0,0,-1),Vector3.new(0,0,1)
 local function clamp(v,lo,hi)return math.max(lo,math.min(hi,v))end
 local function lerp(a,b,t)return a+(b-a)*t end
 local function sign(x)return x>0 and 1 or x<0 and -1 or 0 end
 local function round(x,d)local m=10^(d or 0);return math.floor(x*m+.5)/m end
 local function map_range(v,a,b,c,d)return c+(v-a)*(d-c)/(b-a)end
---[[ End NebScript Runtime ]]
---]]
+-- End NebScript Runtime
+]=]
 
 local function compileNebScript(src)
-	local out = src
-
-	-- ── 1. String interpolation  "hello $name!"  →  "hello "..tostring(name).."!" ──
-	out = out:gsub('"([^"]*)"', function(inner)
-		if inner:find("%$[%a_]") then
-			local r=inner:gsub("%$([%a_][%w_%.]*)", '"..tostring(%1).."')
-			return '"'..r..'"'
+	-- Helper: split into string/comment/code segments for safe transforms
+	local function splitLine(line)
+		local parts = {}
+		local i, n = 1, #line
+		while i <= n do
+			local ch = line:sub(i,i)
+			if (ch=="/" and line:sub(i,i+1)=="//") or (ch=="-" and line:sub(i,i+1)=="--") then
+				parts[#parts+1] = {k="cmt", v=line:sub(i)}; break
+			elseif ch=='"' or ch=="'" or ch=="`" then
+				local q=ch; local s=i; i=i+1
+				while i<=n do local c2=line:sub(i,i); if c2=="\\" then i=i+2 elseif c2==q then i=i+1; break else i=i+1 end end
+				parts[#parts+1] = {k="str", v=line:sub(s,i-1)}
+			else
+				local s=i
+				while i<=n do local c2=line:sub(i,i)
+					if c2=='"' or c2=="'" or c2=="`" then break end
+					if (c2=="/" and line:sub(i,i+1)=="//") or (c2=="-" and line:sub(i,i+1)=="--") then break end
+					i=i+1
+				end
+				if i>s then parts[#parts+1] = {k="code", v=line:sub(s,i-1)} end
+			end
 		end
-		return '"'..inner..'"'
-	end)
-	-- backtick template literal `hello ${name}` → "hello "..tostring(name)..""
-	out = out:gsub("`([^`]*)`", function(inner)
-		local r=inner:gsub("%${([^}]+)}", '"..tostring(%1).."')
-		return '"'..r..'"'
-	end)
+		return parts
+	end
 
-	-- ── 2. Arrow fns  (a, b) -> expr  and  a -> expr  ──────────────────────
-	out = out:gsub("%(([^%)]*)%)%s*%->%s*(%b{})", function(params,body)
-		local inner=body:sub(2,#body-1)
-		return "function("..params..")"..inner.." end"
+	local function transformCode(line, fn)
+		local parts = splitLine(line)
+		local r = ""
+		for _,p in ipairs(parts) do r = r .. (p.k=="code" and fn(p.v) or p.v) end
+		return r
+	end
+
+	-- Step 0: split into lines
+	local lines = {}
+	for ln in (src.."\n"):gmatch("([^\n]*)\n") do lines[#lines+1] = ln end
+
+	-- Step 1: strip // and /* comments, process string interpolation
+	for idx, ln in ipairs(lines) do
+		local tr = ln:match("^%s*(.-)%s*$")
+		-- Blank out pure comment lines (// ... or /* ... or ═══ section dividers)
+		if tr:match("^//") or tr:match("^/%*") or tr:match("^══") or tr:match("^──") then
+			lines[idx] = ""
+		else
+		-- Strip inline // comments and do string interpolation
+		do
+			local parts = splitLine(ln)
+			local result = ""
+			for _, p in ipairs(parts) do
+				if p.k == "cmt" then
+					-- drop the comment entirely
+				elseif p.k == "str" then
+					local raw = p.v
+					local q = raw:sub(1,1)
+					local inner = raw:sub(2, #raw-1)
+					if inner:find("%$[%a_]") then
+						local r = inner:gsub("%$([%a_][%w_%.]*)","\"..tostring(%1)..\"")
+						result = result .. '"' .. r .. '"'
+					elseif q == "`" then
+						local r = inner:gsub("%${([^}]+)}","\"..tostring(%1)..\"")
+						result = result .. '"' .. r .. '"'
+					else
+						result = result .. raw
+					end
+				else
+					result = result .. p.v
+				end
+			end
+			lines[idx] = result
+		end
+		end -- else
+	end
+
+	local out = table.concat(lines, "\n")
+
+	-- Step 2: Arrow fns (params) -> {body} and (params) -> expr
+	out = out:gsub("%(([^%)]*)%)%s*%->%s*(%b{})", function(params, body)
+		return "function("..params..")"..body:sub(2,#body-1).." end"
 	end)
-	out = out:gsub("%(([^%)]*)%)%s*%->%s*([^\n{][^\n]*)", function(params,expr)
+	out = out:gsub("%(([^%)]*)%)%s*%->%s*([^\n{][^\n]*)", function(params, expr)
 		return "function("..params..") return "..expr.." end"
 	end)
-	out = out:gsub("([%a_][%w_]*)%s*%->%s*([^\n{][^\n]*)", function(p,expr)
+	out = out:gsub("([%a_][%w_]*)%s*%->%s*([^\n{][^\n]*)", function(p, expr)
 		return "function("..p..") return "..expr.." end"
 	end)
 
-	-- ── 3. Fat arrows  a => expr  ────────────────────────────────────────────
-	out = out:gsub("([%a_][%w_]*)%s*=>%s*([^\n]+)", function(p,expr)
+	-- Step 3: Fat arrows param => expr
+	out = out:gsub("([%a_][%w_]*)%s*=>%s*([^\n]+)", function(p, expr)
 		return "function("..p..") return "..expr.." end"
 	end)
 
-	-- ── 4. Pipe  x |> fn1 |> fn2  ────────────────────────────────────────────
+	-- Step 4: fn / func → function (BEFORE pipe so pipe sees "function")
+	out = out:gsub("%f[%a]fn%f[%A]",   "function")
+	out = out:gsub("%f[%a]func%f[%A]", "function")
+
+	-- Step 5: Pipe  x |> fn1 |> fn2
 	local function resolvePipes(segment)
-		local parts={}
-		for piece in (segment.."|>"):gmatch("(.-)%s*|>%s*") do
-			local trimmed=piece:match("^%s*(.-)%s*$")
-			if trimmed~="" then parts[#parts+1]=trimmed end
+		-- Handle assignment prefix: `local x = VALUE |> fn` or `x = VALUE |> fn`
+		local lhs, rhs = segment:match("^(.-%s*=%s*)(.+|>.*)$")
+		if not lhs or lhs:match("|>") then lhs = nil; rhs = segment end
+		local parts = {}
+		for piece in (rhs.."|>"):gmatch("(.-)%s*|>%s*") do
+			local t = piece:match("^%s*(.-)%s*$")
+			if t ~= "" then parts[#parts+1] = t end
 		end
-		if #parts<2 then return segment end
-		local res=parts[1]
-		for j=2,#parts do res=parts[j].."("..res..")" end
-		return res
+		if #parts < 2 then return segment end
+		local res = parts[1]
+		for j = 2, #parts do res = parts[j].."("..res..")" end
+		return (lhs or "")..res
 	end
-	out = out:gsub("[^\n]+", function(line)
-		if line:find("|>") then return resolvePipes(line) end
-		return line
-	end)
+	do
+		local srcLines = {}
+		for ln in (out.."\n"):gmatch("([^\n]*)\n") do srcLines[#srcLines+1] = ln end
+		local resultLines = {}
+		local i2 = 1
+		while i2 <= #srcLines do
+			local ln = srcLines[i2]
+			local nextPipe = (i2 < #srcLines) and srcLines[i2+1]:match("^%s*|>")
+			if ln:find("|>") or nextPipe then
+				local chain = {ln}
+				local indent = ln:match("^(%s*)")
+				while i2+1 <= #srcLines and srcLines[i2+1]:match("^%s*|>") do
+					i2 = i2+1; chain[#chain+1] = srcLines[i2]; indent = srcLines[i2]:match("^(%s*)")
+				end
+				local combined = table.concat(chain, " ")
+				resultLines[#resultLines+1] = indent..resolvePipes(combined:match("^%s*(.-)%s*$"))
+			else
+				resultLines[#resultLines+1] = ln
+			end
+			i2 = i2+1
+		end
+		out = table.concat(resultLines, "\n")
+	end
 
-	-- ── 5. Nullish  x ?? y  ──────────────────────────────────────────────────
-	out = out:gsub("([%w_%.%(%)%[%]\"'`]+)%s*%?%?%s*([%w_%.%(%)%[%]\"'`]+)",
-		"(%1~=nil and %1 or %2)")
+	-- Step 6: Operators (string/comment safe)
+	do
+		local opLines = {}
+		for ln in (out.."\n"):gmatch("([^\n]*)\n") do
+			opLines[#opLines+1] = transformCode(ln, function(code)
+				code = code:gsub("%*%*","^")
+				code = code:gsub("!==","~="):gsub("===","==")
+				code = code:gsub("!=","~=")
+				code = code:gsub("&&"," and ")
+				code = code:gsub("||"," or ")
+				-- ! as logical not (not inside ~= or !=)
+				code = code:gsub("([^~=<>!%a%d_])!([^=])", function(a,b) return a.." not "..b end)
+				code = code:gsub("^!([^=])", function(b) return " not "..b end)
+				return code
+			end)
+		end
+		out = table.concat(opLines, "\n")
+	end
 
-	-- ── 6. Safe nav  x?.y  and  x?.fn()  ─────────────────────────────────────
-	out = out:gsub("([%a_][%w_]*)%?%.([%a_][%w_]*)(%()", function(obj,m,p)
-		return "("..obj.." and "..obj..":"..m..p.." or nil)"
-	end)
-	out = out:gsub("([%a_][%w_]*)%?%.([%a_][%w_]*)", function(obj,m)
-		return "("..obj.." and "..obj.."."..m.." or nil)"
-	end)
-
-	-- ── 7. Operators  ─────────────────────────────────────────────────────────
-	out = out:gsub("%*%*", "^")                      -- ** → ^
-	out = out:gsub("!==", "~="):gsub("===","==")     -- !== === 
-	out = out:gsub("!=",  "~=")                      -- !=
-	out = out:gsub("&&",  " and ")                   -- &&
-	out = out:gsub("||",  " or ")                    -- ||
-	-- ! (not) — only when not preceded by ~ or = 
-	out = out:gsub("([^~=<>!])!([^=])", function(a,b) return a.." not "..b end)
-
-	-- ── 8. Declarations  ─────────────────────────────────────────────────────
+	-- Step 7: Declarations
 	out = out:gsub("%f[%a]let%f[%A]",   "local")
 	out = out:gsub("%f[%a]const%f[%A]", "local")
 	out = out:gsub("%f[%a]var%f[%A]",   "local")
 	out = out:gsub("%f[%a]mut%f[%A]",   "local")
 
-	-- ── 9. fn / func → function  ──────────────────────────────────────────────
-	out = out:gsub("%f[%a]fn%f[%A]",   "function")
-	out = out:gsub("%f[%a]func%f[%A]", "function")
-
-	-- ── 10. elif → elseif  ────────────────────────────────────────────────────
+	-- Step 8: elif → elseif
 	out = out:gsub("%f[%a]elif%f[%A]", "elseif")
 
-	-- ── 11. unless / until  ───────────────────────────────────────────────────
-	out = out:gsub("%f[%a]unless%f[%A]%s+(.-)%s+then", function(cond)
-		return "if not ("..cond..") then"
-	end)
-	out = out:gsub("%f[%a]until%f[%A]%s+(.-)%s+do", function(cond)
-		return "while not ("..cond..") do"
-	end)
+	-- Step 9: unless / until
+	out = out:gsub("%f[%a]unless%f[%A]%s+(.-)%s+then", function(c) return "if not ("..c..") then" end)
+	out = out:gsub("%f[%a]until%f[%A]%s+(.-)%s+do",   function(c) return "while not ("..c..") do" end)
 
-	-- ── 12. loop → while true do  ─────────────────────────────────────────────
+	-- Step 10: loop → while true do
 	out = out:gsub("%f[%a]loop%f[%A]%s*\n", "while true do\n")
 	out = out:gsub("%f[%a]loop%f[%A]%s*{",  "while true do")
 
-	-- ── 13. for x in range(...)  ──────────────────────────────────────────────
+	-- Step 11: for x in range(...)
 	out = out:gsub("for%s+([%a_][%w_]*)%s+in%s+range%((%d+)%)",
 		function(v,n) return "for "..v.."=1,"..n.." do" end)
-	out = out:gsub("for%s+([%a_][%w_]*)%s+in%s+range%(([^,%)]+)%s*,%s*([^,%)]+)%)",
-		function(v,a,b) return "for "..v.."="..a..","..b.." do" end)
 	out = out:gsub("for%s+([%a_][%w_]*)%s+in%s+range%(([^,%)]+)%s*,%s*([^,%)]+)%s*,%s*([^%)]+)%)",
 		function(v,a,b,s) return "for "..v.."="..a..","..b..","..s.." do" end)
+	out = out:gsub("for%s+([%a_][%w_]*)%s+in%s+range%(([^,%)]+)%s*,%s*([^%)]+)%)",
+		function(v,a,b) return "for "..v.."="..a..","..b.." do" end)
 
-	-- ── 14. match / case / default  ───────────────────────────────────────────
-	local matchDepth=0
-	out = out:gsub("match%s+([^\n{]+)%s*{", function(expr)
-		matchDepth=matchDepth+1
-		return "do local __m=("..expr:match("^%s*(.-)%s*$")..")"
-	end)
-	local caseNum=0
-	out = out:gsub("case%s+([^\n:]+):", function(pat)
-		caseNum=caseNum+1
-		local kw = caseNum==1 and "if" or "elseif"
-		return kw.." __m==("..pat:match("^%s*(.-)%s*$")..") then"
-	end)
-	out = out:gsub("%f[%a]default%f[%A]%s*:", "else")
+	-- Step 12: match / case / default (per-block caseNum)
+	out = out:gsub("match%s+([^\n{]+)%s*{([^}]*)}",
+		function(expr, body)
+			local e = expr:match("^%s*(.-)%s*$")
+			local caseNum = 0
+			local inner = body:gsub("case%s+([^\n:]+):", function(pat)
+				caseNum = caseNum+1
+				return (caseNum==1 and "if" or "elseif").." __m==("..pat:match("^%s*(.-)%s*$")..") then"
+			end)
+			inner = inner:gsub("%f[%a]default%f[%A]%s*:", "else")
+			return "do local __m=("..e..")\n"..inner.."\nend\nend"
+		end)
 
-	-- ── 15. struct  ───────────────────────────────────────────────────────────
+	-- Step 13: struct
 	out = out:gsub("struct%s+([%a_][%w_]*)%s*(%b{})", function(name, body)
-		local fields={}
+		local fields = {}
 		for f in body:sub(2,#body-1):gmatch("[%a_][%w_]*") do fields[#fields+1]=f end
-		local params=table.concat(fields,",")
-		local init={}; for _,f in ipairs(fields) do init[#init+1]=f.."="..f end
-		return ("local %s={} %s.__index=%s\n"):format(name,name,name)..
-			("function %s.new(%s) return setmetatable({%s},%s) end"):format(
-				name,params,table.concat(init,","),name)
+		local params = table.concat(fields, ",")
+		local init = {}; for _,f in ipairs(fields) do init[#init+1]=f.."="..f end
+		return ("local %s={} %s.__index=%s\nfunction %s.new(%s) return setmetatable({%s},%s) end")
+			:format(name,name,name, name,params,table.concat(init,","),name)
 	end)
 
-	-- ── 16. class ... extends ... / class ...  ────────────────────────────────
+	-- Step 14: class (with method prefixing inside body)
+	out = out:gsub("class%s+([%a_][%w_]*)%s+extends%s+([%a_][%w_]*)%s*(%b{})", function(n,p,body)
+		local inner = body:sub(2,#body-1)
+		inner = inner:gsub("\n(%s*)function%s+([%a_][%w_]*)", "\n%1function "..n..".%2")
+		return "local "..n.."=setmetatable({},{__index="..p.."}) "..n..".__index="..n.."\n"..inner
+	end)
+	out = out:gsub("class%s+([%a_][%w_]*)%s*(%b{})", function(n,body)
+		local inner = body:sub(2,#body-1)
+		inner = inner:gsub("\n(%s*)function%s+([%a_][%w_]*)", "\n%1function "..n..".%2")
+		return "local "..n.."={} "..n..".__index="..n.."\n"..inner
+	end)
+	-- fallback for brace-less class headers
 	out = out:gsub("class%s+([%a_][%w_]*)%s+extends%s+([%a_][%w_]*)", function(n,p)
 		return "local "..n.."=setmetatable({},{__index="..p.."}) "..n..".__index="..n
 	end)
@@ -888,20 +971,20 @@ local function compileNebScript(src)
 		return "local "..n.."={} "..n..".__index="..n
 	end)
 
-	-- ── 17. new ClassName(...)  ───────────────────────────────────────────────
+	-- Step 15: new ClassName(...)
 	out = out:gsub("new%s+([%a_][%w_]*)%(", function(n) return n..".new(" end)
 
-	-- ── 18. Spread  ...arr  →  table.unpack(arr)  ────────────────────────────
+	-- Step 16: spread ...arr → table.unpack(arr)
 	out = out:gsub("%.%.%.([%a_][%w_]*)", function(v) return "table.unpack("..v..")" end)
 
-	-- ── 19. import ... from "path"  ───────────────────────────────────────────
+	-- Step 17: import / export
 	out = out:gsub('import%s+([%a_][%w_]*)%s+from%s+"([^"]+)"',
-		function(name,path) return 'local '..name..'=require("'..path..'")' end)
+		function(nm,path) return 'local '..nm..'=require("'..path..'")' end)
 	out = out:gsub("import%s+([%a_][%w_]*)%s+from%s+'([^']+)'",
-		function(name,path) return "local "..name.."=require('"..path.."')" end)
+		function(nm,path) return "local "..nm.."=require('"..path.."')" end)
 	out = out:gsub("%f[%a]export%f[%A]%s*", "")
 
-	-- ── 20. try / catch  ──────────────────────────────────────────────────────
+	-- Step 18: try / catch
 	out = out:gsub("try%s*(%b{})%s*catch%s*%(([^%)]+)%)%s*(%b{})",
 		function(tbody,evar,cbody)
 			return "local __ok,__err=pcall(function()\n"..tbody:sub(2,#tbody-1).."\nend)\n"..
@@ -910,70 +993,101 @@ local function compileNebScript(src)
 	out = out:gsub("%f[%a]throw%f[%A]", "error")
 	out = out:gsub("%f[%a]raise%f[%A]", "error")
 
-	-- ── 21. Decorators  @name  →  comment  (can be extended)  ────────────────
+	-- Step 19: decorators @name → comment
 	out = out:gsub("(@[%a_][%w_]*[^\n]*)\n", "-- [decorator] %1\n")
 
-	-- ── 22. Type annotations  name: Type  →  name  ───────────────────────────
-	-- strip `: SomeType` from fn params and let declarations
-	out = out:gsub("([%a_][%w_]*)%s*:%s*[%a_][%w_%.<>|?%[%]]*", function(id)
-		return id
-	end)
-
-	-- ── 23. :: namespace  →  .  ───────────────────────────────────────────────
+	-- Step 20: :: namespace → .
 	out = out:gsub("::", ".")
 
-	-- ── 24. Compound operators  ───────────────────────────────────────────────
-	-- x += y → x = x + y  (for supported set)
-	local compound={["+="]="+",["-="]="-",["*="]="*",["/="]="/",["..="]=".."}
+	-- Step 21: compound operators
+	local compound = {["+="]="+",["-="]="-",["*="]="*",["/="]="/",["..="]=".."}
 	for op,base in pairs(compound) do
 		out = out:gsub("([%a_][%w_%.%[%]]*) "..op:gsub("%p","%%%1").." ([^\n]+)",
-			function(lhs,rhs)
-				return lhs.." = "..lhs.." "..base.." ("..rhs..")"
-			end)
+			function(lhs,rhs) return lhs.." = "..lhs.." "..base.." ("..rhs..")" end)
 	end
 
-	-- ── 25. Integer division  x // y  →  math.floor(x/y)  ───────────────────
-	-- only when not a comment (// already stripped above at comment stage)
+	-- Step 22: integer division x // y → math.floor(x/y)
 	out = out:gsub("([%w%)%]]+)%s*//%s*([%w%(]+)", function(a,b)
 		return "math.floor("..a.."/"..b..")"
 	end)
 
-	-- ── 26. Always-positive modulo  x %% y  →  ((x%y)+y)%y  ─────────────────
-	out = out:gsub("([%w%)%]]+)%s*%%%%s*([%w%(]+)", function(a,b)
-		return "(("..a.."%"..b.."+"..b..")".."%"..b..")"
+	-- Step 23: always-positive modulo x %% y → ((x%y)+y)%y
+	out = out:gsub("(%-?%s*[%w%)%]]+)%s*%%%%s*([%w%(]+)", function(a,b)
+		local la = a:match("^%s*(.-)%s*$")
+		return "(("..la.."%"..b.."+"..b..")".."%"..b..")"
 	end)
 
-	-- ── 27. with ... using  ───────────────────────────────────────────────────
+	-- Step 24: nullish ?? 
+	out = out:gsub("([%w_%.%(%)%[%]\"']+)%s*%?%?%s*([%w_%.%(%)%[%]\"']+)",
+		"(%1~=nil and %1 or %2)")
+
+	-- Step 25: safe nav x?.y
+	out = out:gsub("([%a_][%w_]*)%?%.([%a_][%w_]*)(%()", function(obj,m,p)
+		return "("..obj.." and "..obj..":"..m..p.." or nil)"
+	end)
+	out = out:gsub("([%a_][%w_]*)%?%.([%a_][%w_]*)", function(obj,m)
+		return "("..obj.." and "..obj.."."..m.." or nil)"
+	end)
+
+	-- Step 26: with ... using
 	out = out:gsub("with%s+(.-)%s+using%s+([%a_][%w_]*)", function(expr,name)
 		return "do local "..name.."="..expr
 	end)
 
-	-- ── Done ──────────────────────────────────────────────────────────────────
-	if S.cmp_insertPreamble then
-		out = NEB_PREAMBLE.."\n"..out
+	-- Step 27: { } braces → do/end
+	do
+		local braceLines = {}
+		for ln in (out.."\n"):gmatch("([^\n]*)\n") do
+			local stripped = ln:match("^%s*(.-)%s*$")
+			if stripped == "{" then
+				braceLines[#braceLines+1] = ln:gsub("{","do",1)
+			elseif stripped == "}" then
+				braceLines[#braceLines+1] = ln:gsub("}","end",1)
+			else
+				braceLines[#braceLines+1] = ln:gsub("%s*{%s*$","")
+			end
+		end
+		out = table.concat(braceLines, "\n")
 	end
+
+	-- Step 28: fix while/for/if lines missing do/then (brace was on next line)
+	do
+		local fixedLines = {}
+		for ln in (out.."\n"):gmatch("([^\n]*)\n") do
+			local tr = ln:match("^%s*(.-)%s*$")
+			if tr:match("^while%s+") and not tr:match("%f[%a]do%f[%A]") and not tr:match("{") then
+				ln = ln:gsub("%s*$"," do")
+			elseif tr:match("^for%s+") and not tr:match("%f[%a]do%f[%A]") and not tr:match("{") then
+				ln = ln:gsub("%s*$"," do")
+			elseif tr:match("^if%s+") and not tr:match("%f[%a]then%f[%A]") and not tr:match("{") and not tr:match("^if%s*$") then
+				ln = ln:gsub("%s*$"," then")
+			elseif tr:match("^elseif%s+") and not tr:match("%f[%a]then%f[%A]") then
+				ln = ln:gsub("%s*$"," then")
+			end
+			fixedLines[#fixedLines+1] = ln
+		end
+		out = table.concat(fixedLines, "\n")
+	end
+
+	if S.cmp_insertPreamble then out = NEB_PREAMBLE.."\n"..out end
 	if S.cmp_wrapInPcall then
 		out = "local __ok,__err=pcall(function()\n"..out.."\nend)\nif not __ok then warn('[NebScript]',__err) end"
 	end
 	return out
 end
 
--- ════════════════════════════════════════════════════════════════════════════
---  RBXPYTHON COMPILER  (Python-like → Roblox Lua)
--- ════════════════════════════════════════════════════════════════════════════
 local function compileRbxPython(src)
 	local lines={}
 	for ln in (src.."\n"):gmatch("([^\n]*)\n") do lines[#lines+1]=ln end
 
 	local out       = {}
 	local indStack  = {0}
-	local blockStack= {}   -- track what each indent opened
+	local blockStack= {}
+	local _currentClass = nil
+	local _classIndent  = -1
 
 	local function curInd() return indStack[#indStack] end
-	local function getInd(ln)
-		local sp=ln:match("^( *)")
-		return #sp
-	end
+	local function getInd(ln) return #(ln:match("^( *)")) end
 
 	local function closeBlocks(newInd)
 		while #indStack>1 and newInd<curInd() do
@@ -981,8 +1095,6 @@ local function compileRbxPython(src)
 			local blk=table.remove(blockStack)
 			if blk=="try_pcall" then
 				out[#out+1]="end)\nif not __ok then"
-			elseif blk=="except" then
-				out[#out+1]="end"
 			else
 				out[#out+1]="end"
 			end
@@ -998,13 +1110,10 @@ local function compileRbxPython(src)
 		s=s:gsub("%f[%a]not%f[%A]"," not ")
 		s=s:gsub("!=","~=")
 		s=s:gsub("%*%*","^")
-		-- f-strings  f"hello {name}"
 		s=s:gsub('f"([^"]*)"', function(inner)
 			local r=inner:gsub("{([^}]+)}", '"..tostring(%1).."')
 			return '"'..r..'"'
 		end)
-		-- self. → self:  for method calls only (heuristic)
-		-- print( → print(
 		return s
 	end
 
@@ -1013,15 +1122,22 @@ local function compileRbxPython(src)
 		local stripped= rawLine:match("^%s*(.-)%s*$")
 		local prefix  = rawLine:match("^( *)")
 
+		-- reset class tracking on unindent
+		if _currentClass and ind <= _classIndent then _currentClass=nil; _classIndent=-1 end
+
 		if stripped == "" then
 			out[#out+1] = ""
 		else
-			closeBlocks(ind)
+			-- Don't close blocks before continuation keywords
+			local isCont = stripped:match("^elif%s") or stripped:match("^else%s*:")
+				or stripped:match("^except") or stripped:match("^finally%s*:")
+			if not isCont then closeBlocks(ind) end
 
+			-- Match patterns
 			local fname, parms   = stripped:match("^def%s+([%a_][%w_]*)%((.-)%)%s*:")
 			local cname          = stripped:match("^class%s+([%a_][%w_]*)%s*:")
 			local cname2, cbase2 = stripped:match("^class%s+([%a_][%w_]*)%(([^%)]+)%)%s*:")
-			if cname2 then cname = cname2 end
+			if cname2 then cname=cname2 end
 			local ifcond   = stripped:match("^if%s+(.+):")
 			local elifcond = stripped:match("^elif%s+(.+):")
 			local whcond   = stripped:match("^while%s+(.+):")
@@ -1038,90 +1154,92 @@ local function compileRbxPython(src)
 			local compE,compV,compI = stripped:match("%[(.-)%s+for%s+([%a_][%w_]*)%s+in%s+(.-)%]")
 
 			if stripped:sub(1,1) == "#" then
-				out[#out+1] = prefix .. "--" .. stripped:sub(2)
+				out[#out+1] = prefix.."--"..stripped:sub(2)
 			elseif fname then
-				local lp = parms:gsub("self,?%s*",""):gsub("%*([%a_][%w_]*)","...")
-				out[#out+1] = prefix .. "function " .. fname .. "(" .. lp .. ")"
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "def"
+				local lp = parms:gsub("%*([%a_][%w_]*)","...")
+				local funcName = (_currentClass and (_currentClass.."."..fname)) or fname
+				out[#out+1] = prefix.."function "..funcName.."("..lp..")"
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="def"
 			elseif cname2 then
 				out[#out+1] = prefix.."local "..cname2.."=setmetatable({},{__index="..cbase2.."}) "..cname2..".__index="..cname2
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "class"
+				_currentClass=cname2; _classIndent=ind
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="class"
 			elseif cname then
 				out[#out+1] = prefix.."local "..cname.."={} "..cname..".__index="..cname
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "class"
+				_currentClass=cname; _classIndent=ind
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="class"
 			elseif ifcond then
-				out[#out+1] = prefix .. "if " .. py2lua(ifcond) .. " then"
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "if"
+				out[#out+1] = prefix.."if "..py2lua(ifcond).." then"
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="if"
 			elseif elifcond then
-				out[#out+1] = prefix .. "elseif " .. py2lua(elifcond) .. " then"
+				out[#out+1] = prefix.."elseif "..py2lua(elifcond).." then"
 			elseif stripped:match("^else%s*:") then
-				out[#out+1] = prefix .. "else"
+				out[#out+1] = prefix.."else"
 			elseif fv3 then
 				out[#out+1] = prefix.."for "..fv3.."="..py2lua(fa3)..","..py2lua(fb3)..","..py2lua(fs3).." do"
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "for"
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="for"
 			elseif fv2 then
 				out[#out+1] = prefix.."for "..fv2.."="..py2lua(fa2)..","..py2lua(fb2).." do"
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "for"
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="for"
 			elseif fv1 then
 				out[#out+1] = prefix.."for "..fv1.."=1,"..py2lua(fa1).." do"
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "for"
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="for"
 			elseif fk then
-				out[#out+1] = prefix.."for "..fk..","..fvkv.." in pairs("..fkvd..")".. " do"
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "for"
+				out[#out+1] = prefix.."for "..fk..","..fvkv.." in pairs("..fkvd..") do"
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="for"
 			elseif fiv then
-				out[#out+1] = prefix.."for _,"..fiv.." in ipairs("..fit..")".. " do"
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "for"
+				out[#out+1] = prefix.."for _,"..fiv.." in ipairs("..fit..") do"
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="for"
 			elseif whcond then
-				out[#out+1] = prefix .. "while " .. py2lua(whcond) .. " do"
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "while"
+				out[#out+1] = prefix.."while "..py2lua(whcond).." do"
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="while"
 			elseif stripped == "try:" then
-				out[#out+1] = prefix .. "local __ok,__err=pcall(function()"
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "try_pcall"
+				out[#out+1] = prefix.."local __ok,__err=pcall(function()"
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="try_pcall"
 			elseif evar or bareEx then
-				out[#out+1] = prefix .. "local " .. (evar or "__err") .. "=__err"
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "except"
+				out[#out+1] = prefix.."local "..(evar or "__err").."=__err"
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="except"
 			elseif stripped == "finally:" then
-				out[#out+1] = prefix .. "-- [finally]"
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "finally"
+				out[#out+1] = prefix.."do -- finally"
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="finally"
 			elseif withExpr then
-				out[#out+1] = prefix .. "do local " .. withVar .. "=" .. py2lua(withExpr)
-				indStack[#indStack+1] = ind+1; blockStack[#blockStack+1] = "with"
+				out[#out+1] = prefix.."do local "..withVar.."="..py2lua(withExpr)
+				indStack[#indStack+1]=ind+1; blockStack[#blockStack+1]="with"
 			elseif stripped == "pass" then
-				out[#out+1] = prefix .. "-- pass"
+				out[#out+1] = prefix.."-- pass"
 			elseif rv ~= nil then
-				out[#out+1] = prefix .. "return " .. py2lua(rv)
+				out[#out+1] = prefix.."return "..py2lua(rv)
 			elseif errmsg then
-				out[#out+1] = prefix .. "error(" .. py2lua(errmsg) .. ")"
+				out[#out+1] = prefix.."error("..py2lua(errmsg)..")"
 			elseif compE then
 				local conv = stripped:gsub("%[(.-)%s+for%s+([%a_][%w_]*)%s+in%s+(.-)%]",
 					function(e,vv,ii) return "{}--[[comprehension: "..e.." for "..vv.." in "..ii.."]]" end)
-				out[#out+1] = prefix .. py2lua(conv)
+				out[#out+1] = prefix..py2lua(conv)
 			else
-				out[#out+1] = prefix .. py2lua(stripped)
+				out[#out+1] = prefix..py2lua(stripped)
 			end
 		end
 	end
 
 	closeBlocks(0)
-
 	return "-- [RbxPython compiled]\n"..table.concat(out,"\n")
 end
 
--- ════════════════════════════════════════════════════════════════════════════
---  TYPERBX COMPILER  (TypeScript-inspired → Roblox Lua)
--- ════════════════════════════════════════════════════════════════════════════
 local function compileTypeRbx(src)
-	local out=src
+	-- Strip // comment lines first
+	local tsLines={}
+	for ln in (src.."\n"):gmatch("([^\n]*)\n") do
+		if not ln:match("^%s*//") then tsLines[#tsLines+1]=ln end
+	end
+	local out=table.concat(tsLines,"\n")
 
-	-- ── 1. Interfaces / type aliases → comments ───────────────────────────────
-	out=out:gsub("interface%s+[%a_][%w_<>, ]*%s*(%b{})", function(blk)
-		return "--[[ interface removed ]]"
-	end)
+	-- 1. Interfaces / type aliases / namespace / declare → comments
+	out=out:gsub("interface%s+[%a_][%w_<>, ]*%s*(%b{})","--[[ interface ]]")
 	out=out:gsub("type%s+[%a_][%w_<>, ]*%s*=[^\n]+","--[[ type alias ]]")
 	out=out:gsub("namespace%s+[%a_][%w_]*%s*(%b{})","--[[ namespace ]]")
 	out=out:gsub("declare%s+[^\n]+","--[[ declare ]]")
 
-	-- ── 2. Enums  →  table  ───────────────────────────────────────────────────
+	-- 2. Enums → table
 	out=out:gsub("enum%s+([%a_][%w_]*)%s*(%b{})", function(name,body)
 		local entries={}; local i=0
 		for e in body:sub(2,#body-1):gmatch("[%a_][%w_]*") do
@@ -1130,28 +1248,30 @@ local function compileTypeRbx(src)
 		return "local "..name.."={"..table.concat(entries,",").."}"
 	end)
 
-	-- ── 3. Generics  Array<T>  →  Array  ─────────────────────────────────────
+	-- 3. Generics Array<T> → Array
 	out=out:gsub("<[%a_][%w_<>, |&%?]*>","")
 
-	-- ── 4. Decorators  @Name  →  comment  ────────────────────────────────────
+	-- 4. Decorators
 	out=out:gsub("(@[%a_][%w_]*[^\n]*)\n","-- [decorator] %1\n")
 
-	-- ── 5. const / let / var → local  ────────────────────────────────────────
+	-- 5. const/let/var → local
 	out=out:gsub("%f[%a]const%f[%A]","local")
 	out=out:gsub("%f[%a]let%f[%A]","local")
 	out=out:gsub("%f[%a]var%f[%A]","local")
 
-	-- ── 6. Visibility modifiers → strip  ─────────────────────────────────────
+	-- 6. Visibility modifiers → strip
 	for _,mod in ipairs({"public","private","protected","readonly","static",
 		"abstract","override","declare","export default","export"}) do
 		out=out:gsub("%f[%a]"..mod:gsub(" ","%%s+").."%f[%A]%s*","")
 	end
 
-	-- ── 7. Arrow fns  (x: T) => expr  /  (x) => { ... }  ────────────────────
+	-- 6b. Strip return type on arrow sigs: ): ReturnType =>  →  ) =>
+	out=out:gsub("%)%s*:%s*[%a_][%w_%.<>|?%[%]]*%s*=>",") =>")
+
+	-- 7. Arrow fns (params): T => expr / (params) => { body }
 	out=out:gsub("%(([^%)]*)%)%s*=>%s*(%b{})", function(params,body)
-		-- strip types from params
 		local p=params:gsub("([%a_][%w_]*)%s*:[^,%)]+","%1")
-		return "function("..p..")"..body:sub(2,#body-1).." end"
+		return "function("..p..")\n"..body:sub(2,#body-1).."\nend"
 	end)
 	out=out:gsub("%(([^%)]*)%)%s*=>%s*([^\n{][^\n]*)", function(params,expr)
 		local p=params:gsub("([%a_][%w_]*)%s*:[^,%)]+","%1")
@@ -1161,61 +1281,166 @@ local function compileTypeRbx(src)
 		return "function("..p..") return "..expr.." end"
 	end)
 
-	-- ── 8. async function → function  ────────────────────────────────────────
+	-- 8. async/await strip
 	out=out:gsub("%f[%a]async%f[%A]%s+","")
 	out=out:gsub("%f[%a]await%f[%A]%s+","")
 
-	-- ── 9. class extends  ─────────────────────────────────────────────────────
-	out=out:gsub("class%s+([%a_][%w_]*)%s+extends%s+([%a_][%w_%.]*)%s*(%b{})", function(n,p,body)
-		local inner=body:sub(2,#body-1)
-		-- constructor → .new
-		inner=inner:gsub("constructor%(([^%)]+)%)", "function "..n..".new(%1)")
+	-- 9. Classes with full body processing
+	local function processClassBody(n, inner)
+		-- constructor → ClassName.new (convert full block including body)
+		inner=inner:gsub("constructor%(([^%)]*)%)%s*(%b{})", function(params, body)
+			local mp=params:gsub("([%a_][%w_]*)%s*:%s*[%a_][%w_%.%[%]<>|?]*","%1")
+			return "function "..n..".new("..mp..")\n"..body:sub(2,#body-1).."\nend"
+		end)
+		inner=inner:gsub("constructor%(%)%s*(%b{})", function(body)
+			return "function "..n..".new()\n"..body:sub(2,#body-1).."\nend"
+		end)
+		-- fallback if no body captured
+		inner=inner:gsub("constructor%(([^%)]*)%)", "function "..n..".new(%1)")
 		inner=inner:gsub("constructor%(%)","function "..n..".new()")
-		return "local "..n.."=setmetatable({},{__index="..p.."}) "..n..".__index="..n.."\n"..inner
+		-- method with return type: name(params): ReturnType { body }
+		inner=inner:gsub("\n([%a_][%w_]*)%(([^%)]*)%)%s*:%s*[%a_][%w_%.%[%]<>| ?]*%s*(%b{})", function(mname,mparams,mbody)
+			if mname=="function" or mname=="local" or mname=="return" then
+				return "\n"..mname.."("..mparams..")"..mbody
+			end
+			local mp=mparams:gsub("([%a_][%w_]*)%s*:%s*[%a_][%w_%.%[%]<>|?]*","%1")
+			return "\nfunction "..n.."."..mname.."("..mp..")\n"..mbody:sub(2,#mbody-1).."\nend"
+		end)
+		-- method without return type: name(params) { body }
+		inner=inner:gsub("\n([%a_][%w_]*)%(([^%)]*)%)%s*(%b{})", function(mname,mparams,mbody)
+			if mname=="function" or mname=="local" or mname=="return" then
+				return "\n"..mname.."("..mparams..")"..mbody
+			end
+			local mp=mparams:gsub("([%a_][%w_]*)%s*:%s*[%a_][%w_%.%[%]<>|?]*","%1")
+			return "\nfunction "..n.."."..mname.."("..mp..")\n"..mbody:sub(2,#mbody-1).."\nend"
+		end)
+		-- strip bare field declarations: `name: Type` alone on a line
+		local cleaned={}
+		for ln in (inner.."\n"):gmatch("([^\n]*)\n") do
+			local tr=ln:match("^%s*(.-)%s*$")
+			if tr:match("^[%a_][%w_]*%s*:%s*[%a_]") or
+			   (tr:match("^[%a_][%w_]*$") and tr~="end" and tr~="else" and tr~="") or
+			   tr:match("^[%a_][%w_]*%(%)%s*:%s*[%a_]") or  -- stub: run(): void
+			   tr:match("^[%a_][%w_]*%([^%)]*%)%s*:%s*[%a_]") then  -- stub: fn(x): void
+				-- skip bare field/method stub
+			else
+				cleaned[#cleaned+1]=ln
+			end
+		end
+		return table.concat(cleaned,"\n")
+	end
+
+	out=out:gsub("class%s+([%a_][%w_]*)%s+extends%s+([%a_][%w_%.]*)%s*(%b{})", function(n,p,body)
+		return "local "..n.."=setmetatable({},{__index="..p.."}) "..n..".__index="..n.."\n"..processClassBody(n,body:sub(2,#body-1))
 	end)
 	out=out:gsub("class%s+([%a_][%w_]*)%s*(%b{})", function(n,body)
-		local inner=body:sub(2,#body-1)
-		inner=inner:gsub("constructor%(([^%)]+)%)", "function "..n..".new(%1)")
-		inner=inner:gsub("constructor%(%)","function "..n..".new()")
-		return "local "..n.."={} "..n..".__index="..n.."\n"..inner
+		return "local "..n.."={} "..n..".__index="..n.."\n"..processClassBody(n,body:sub(2,#body-1))
 	end)
 
-	-- ── 10. new ClassName(...)  ───────────────────────────────────────────────
+	-- 9b. null/undefined → nil
+	out=out:gsub("%f[%a]null%f[%A]","nil")
+	out=out:gsub("%f[%a]undefined%f[%A]","nil")
+
+	-- 10. new ClassName(...)
 	out=out:gsub("new%s+([%a_][%w_]*)%(", function(n) return n..".new(" end)
 
-	-- ── 11. Type annotations on variables and params  ─────────────────────────
-	out=out:gsub("([%a_][%w_]*)%s*:%s*[%a_][%w_%.<>|&%?%[%]]*","% 1")
+	-- 11. Type annotations (union-safe)
+	-- Match `name: Type` where Type may include unions like `string | null`
+	-- but stop before `=` to avoid eating assignment operators
+	out=out:gsub("([%a_][%w_]*)%s*:%s*([%a_][%w_%.<>|&%?%[%]]*%s*[|&]%s*)*[%a_][%w_%.<>|&%?%[%]]*", function(full)
+		return full:match("^([%a_][%w_]*)")
+	end)
 
-	-- ── 12. Template literals  `hello ${name}`  ──────────────────────────────
+	-- 12. Template literals
 	out=out:gsub("`([^`]*)`", function(inner)
-		local r=inner:gsub("%${([^}]+)}", '"..tostring(%1).."')
+		local r=inner:gsub("%${([^}]+)}",'"..tostring(%1).."')
 		return '"'..r..'"'
 	end)
 
-	-- ── 13. !== / === / != ───────────────────────────────────────────────────
+	-- 13. !== / === / !=
 	out=out:gsub("!==","~="):gsub("===","=="):gsub("!=","~=")
 
-	-- ── 14. && / || / !  ─────────────────────────────────────────────────────
-	out=out:gsub("&&"," and "):gsub("||"," or ")
-	out=out:gsub("([^~=!<>])!([^=])", function(a,b) return a.." not "..b end)
+	-- 14. && / || / ! (string-safe)
+	do
+		local function safeLine(ln, fn)
+			local parts={}; local i2=1; local n2=#ln
+			while i2<=n2 do
+				local ch=ln:sub(i2,i2)
+				if (ch=="/" and ln:sub(i2,i2+1)=="//") or (ch=="-" and ln:sub(i2,i2+1)=="--") then
+					parts[#parts+1]={c=ln:sub(i2)}; break
+				elseif ch=='"' or ch=="'" or ch=="`" then
+					local q=ch; local s=i2; i2=i2+1
+					while i2<=n2 do local c2=ln:sub(i2,i2); if c2=="\\" then i2=i2+2 elseif c2==q then i2=i2+1; break else i2=i2+1 end end
+					parts[#parts+1]={s=ln:sub(s,i2-1)}
+				else
+					local s=i2
+					while i2<=n2 do local c2=ln:sub(i2,i2); if c2=='"' or c2=="'" or c2=="`" then break end; if (c2=="/" and ln:sub(i2,i2+1)=="//") or (c2=="-" and ln:sub(i2,i2+1)=="--") then break end; i2=i2+1 end
+					if i2>s then parts[#parts+1]={c=ln:sub(s,i2-1)} end
+				end
+			end
+			local r=""
+			for _,p in ipairs(parts) do r=r..(p.s and p.s or (p.c and fn(p.c) or "")) end
+			return r
+		end
+		local tsL={}
+		for ln in (out.."\n"):gmatch("([^\n]*)\n") do
+			tsL[#tsL+1]=safeLine(ln,function(code)
+				code=code:gsub("&&"," and "):gsub("||"," or ")
+				code=code:gsub("([^~=!<>])!([^=])",function(a,b)return a.." not "..b end)
+				return code
+			end)
+		end
+		out=table.concat(tsL,"\n")
+	end
 
-	-- ── 15. Nullish / optional chain  ────────────────────────────────────────
-	out=out:gsub("([%w_%.%(%)%[%]\"'`]+)%s*%?%?%s*([%w_%.%(%)%[%]\"'`]+)",
-		"(%1~=nil and %1 or %2)")
-	out=out:gsub("([%a_][%w_]*)%?%.([%a_][%w_]*)", function(o,m)
-		return "("..o.." and "..o.."."..m.." or nil)"
-	end)
+	-- 15. Nullish / optional chain
+	out=out:gsub("([%w_%.%(%)%[%]\"']+)%s*%?%?%s*([%w_%.%(%)%[%]\"']+)","(%1~=nil and %1 or %2)")
+	out=out:gsub("([%a_][%w_]*)%?%.([%a_][%w_]*)", function(o,m) return "("..o.." and "..o.."."..m.." or nil)" end)
 
-	-- ── 16. try / catch / finally  ───────────────────────────────────────────
+	-- 16. try/catch
 	out=out:gsub("try%s*(%b{})%s*catch%s*%(([^%)]+)%)%s*(%b{})",
 		function(tbody,evar,cbody)
 			return "local __ok,__err=pcall(function()\n"..tbody:sub(2,#tbody-1).."\nend)\n"..
 				"if not __ok then\nlocal "..evar:match("[%a_][%w_]*").."=__err\n"..cbody:sub(2,#cbody-1).."\nend"
 		end)
-	out=out:gsub("throw%s+new%s+[%a_][%w_]*%(([^%)]+)%)", "error(%1)")
-	out=out:gsub("%f[%a]throw%f[%A]%s+","error(")
+	-- throw (string-safe)
+	do
+		local throwLines={}
+		for ln in (out.."\n"):gmatch("([^\n]*)\n") do
+			-- only transform throw outside strings
+			local changed = false
+			local result = ""
+			local i2,n2=1,#ln
+			while i2<=n2 do
+				local ch=ln:sub(i2,i2)
+				if ch=='"' or ch=="'" or ch=="`" then
+					local q=ch; local s=i2; i2=i2+1
+					while i2<=n2 do local c2=ln:sub(i2,i2); if c2=="\\" then i2=i2+2 elseif c2==q then i2=i2+1; break else i2=i2+1 end end
+					result=result..ln:sub(s,i2-1)
+				else
+					local seg=ln:sub(i2,i2)
+					-- look for throw keyword at this position
+					local rest=ln:sub(i2)
+					local tnew=rest:match("^throw%s+new%s+[%a_][%w_]*%(([^%)]+)%)")
+					local tbare=rest:match("^throw%s+([^\n]+)")
+					if tnew then
+						result=result.."error("..tnew..")"
+						i2=i2+#rest:match("^(throw%s+new%s+[%a_][%w_]*%([^%)]*%))")
+						changed=true
+					elseif tbare and rest:match("^throw%s+") then
+						result=result.."error("..tbare:match("^%s*(.-)%s*$")..")"
+						i2=n2+1; changed=true
+					else
+						result=result..ch; i2=i2+1
+					end
+				end
+			end
+			throwLines[#throwLines+1]=result
+		end
+		out=table.concat(throwLines,"\n")
+	end
 
-	-- ── 17. import { x, y } from "mod"  ──────────────────────────────────────
+	-- 17. import { x, y } from "mod"
 	out=out:gsub('import%s*{([^}]+)}%s*from%s*"([^"]+)"', function(names,path)
 		local r={}
 		for nm in names:gmatch("[%a_][%w_]*") do
@@ -1227,18 +1452,16 @@ local function compileTypeRbx(src)
 		return 'local '..n..'=require("'..p..'")'
 	end)
 
-	-- ── 18. Semicolons → remove  ──────────────────────────────────────────────
+	-- 18. Semicolons
 	out=out:gsub(";%s*\n","\n"):gsub(";%s*$","")
 
-	-- ── 19. ** → ^  ──────────────────────────────────────────────────────────
+	-- 19. ** → ^
 	out=out:gsub("%*%*","^")
 
 	return "-- [TypeRbx compiled]\n"..out
 end
 
--- ════════════════════════════════════════════════════════════════════════════
---  MASTER COMPILE
--- ════════════════════════════════════════════════════════════════════════════
+
 local function compile(content, lang)
 	if lang=="neb" then
 		return pcall(compileNebScript, content)
@@ -1247,7 +1470,7 @@ local function compile(content, lang)
 	elseif lang=="typerbx" then
 		return pcall(compileTypeRbx, content)
 	elseif lang=="md" or lang=="txt" then
-		return true, "--[[\n"..content.."\n]]"
+		return true, "--[=[\n"..content.."\n]=]"
 	end
 	return true, content
 end
@@ -2139,7 +2362,7 @@ local function showInputDialog(title, placeholder, callback)
 	mkCorner(cancel,6)
 	ok.Activated:Connect(function() finish(box.Text) end)
 	cancel.Activated:Connect(function() finish(nil) end)
-	ov.Activated:Connect(function() finish(nil) end)
+	ov.InputBegan:Connect(function(inp) if inp.UserInputType==Enum.UserInputType.MouseButton1 then finish(nil) end end)
 	box:CaptureFocus()
 end
 
@@ -2202,6 +2425,7 @@ local openTabs  = {}   -- { node, frame, label, dot (dirty indicator) }
 local activeTab = nil  -- node
 
 local editorBox     = nil   -- TextBox (main editing surface)
+local lineNumLabel  = nil   -- line numbers sidebar
 local lineNumScroll = nil
 local editorScroll  = nil
 local sidebarScroll = nil
@@ -2315,7 +2539,7 @@ local function openTab(node)
 	local tabBar=GUI_ROOT and GUI_ROOT:FindFirstChild("TabBar",true)
 	if not tabBar then return end
 
-	local tabFrame=mkFrame({Size=UDim2.new(0,170,1,0),BackgroundColor3=T.BG_TAB,
+	local tabFrame=mkBtn({Text="",Size=UDim2.new(0,170,1,0),BackgroundColor3=T.BG_TAB,
 		LayoutOrder=#openTabs+1,Parent=tabBar})
 	mkCorner(tabFrame,0)
 	mkStroke(tabFrame,T.BORDER,1)
@@ -2504,38 +2728,38 @@ refreshFileTree = function()
 			btn.MouseButton2Click:Connect(function()
 				showDropdown("📄 "..node.name.." ›",
 					{"Open","Change Language","Rename","Duplicate","Compile","Delete"}, function(choice)
-						if choice=="Open" then
-							openTab(node)
-						elseif choice=="Change Language" then
-							showDropdown("Select Language",{"NebScript","RbxPython","TypeRbx","Markdown","PlainText"},function(lang)
-								local m={NebScript="neb",RbxPython="rbxpy",TypeRbx="typerbx",Markdown="md",PlainText="txt"}
-								node.lang=m[lang] or "neb"; refreshFileTree(); saveProject()
-								toast("Language changed to "..lang,"info")
-							end)
-						elseif choice=="Rename" then
-							showInputDialog("Rename File",node.name,function(name)
-								if name and name~="" then fsRename(node,name); refreshFileTree(); saveProject() end
-							end)
-						elseif choice=="Duplicate" then
-							local newNode=fsNode("file",node.name.."_copy",node.parent,{lang=node.lang,content=node.content})
-							refreshFileTree(); saveProject()
-							toast("Duplicated","success")
-						elseif choice=="Compile" then
-							saveActiveContent()
-							local inst,err=compileAndOutput(node)
-							if inst then toast("Compiled → "..inst.Name,"success")
-							else toast(tostring(err),"error") end
-						elseif choice=="Delete" then
-							showConfirm("Delete '"..node.name.."'?",function(y)
-								if y then
-									local _,ti=findTabInfo(node)
-									if ti then closeTab(node) end
-									fsRemove(node); refreshFileTree(); saveProject()
-									toast("Deleted","warn")
-								end
-							end)
-						end
-					end)
+					if choice=="Open" then
+						openTab(node)
+					elseif choice=="Change Language" then
+						showDropdown("Select Language",{"NebScript","RbxPython","TypeRbx","Markdown","PlainText"},function(lang)
+							local m={NebScript="neb",RbxPython="rbxpy",TypeRbx="typerbx",Markdown="md",PlainText="txt"}
+							node.lang=m[lang] or "neb"; refreshFileTree(); saveProject()
+							toast("Language changed to "..lang,"info")
+						end)
+					elseif choice=="Rename" then
+						showInputDialog("Rename File",node.name,function(name)
+							if name and name~="" then fsRename(node,name); refreshFileTree(); saveProject() end
+						end)
+					elseif choice=="Duplicate" then
+						local newNode=fsNode("file",node.name.."_copy",node.parent,{lang=node.lang,content=node.content})
+						refreshFileTree(); saveProject()
+						toast("Duplicated","success")
+					elseif choice=="Compile" then
+						saveActiveContent()
+						local inst,err=compileAndOutput(node)
+						if inst then toast("Compiled → "..inst.Name,"success")
+						else toast(tostring(err),"error") end
+					elseif choice=="Delete" then
+						showConfirm("Delete '"..node.name.."'?",function(y)
+							if y then
+								local _,ti=findTabInfo(node)
+								if ti then closeTab(node) end
+								fsRemove(node); refreshFileTree(); saveProject()
+								toast("Deleted","warn")
+							end
+						end)
+					end
+				end)
 			end)
 		end
 	end
@@ -2803,6 +3027,12 @@ end
 --  MAIN UI BUILD
 -- ════════════════════════════════════════════════════════════════════════════
 local function buildUI()
+	-- Reset state on every open
+	openTabs = {}
+	activeTab = nil
+	editorBox = nil
+	lineNumLabel = nil
+	fileTreeCont = nil
 	-- Destroy existing
 	local existing=game:GetService("CoreGui"):FindFirstChild("NebScriptIDE")
 	if existing then existing:Destroy() end
@@ -2831,10 +3061,10 @@ local function buildUI()
 		if i%3==0 then
 			local function twinkle()
 				tween(star,{BackgroundTransparency=1-(alpha*.3)},math.random()*2+1,
-				Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
+					Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
 				task.delay(math.random()*2+1,function()
 					tween(star,{BackgroundTransparency=1-alpha},math.random()*2+1,
-					Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
+						Enum.EasingStyle.Sine,Enum.EasingDirection.InOut)
 					task.delay(math.random()*3+2,twinkle)
 				end)
 			end
